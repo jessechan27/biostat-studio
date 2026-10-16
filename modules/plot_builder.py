@@ -61,15 +61,10 @@ def apply_plot_customizations(ax, fig, title: str = "", xlabel: str = "", ylabel
     if ylabel:
         ax.set_ylabel(ylabel, fontsize=label_fontsize, labelpad=8)
     
-    # Scale adjustment: Never apply log scale to categorical text axis
+    # Scale adjustment: Only apply log scale if NOT categorical
     if not is_x_categorical and xscale == 'log':
         try:
             ax.set_xscale('log')
-        except Exception:
-            pass
-    elif xscale == 'linear':
-        try:
-            ax.set_xscale('linear')
         except Exception:
             pass
 
@@ -205,22 +200,38 @@ def create_group_distribution_plot(df: pd.DataFrame, x_col: str, y_col: str,
     ]
 
     if "Boxplot" in plot_type:
-        sns.boxplot(data=sub_df, x=x_col, y=y_col, hue=hue_col,
-                    palette=colors, ax=ax, boxprops=dict(alpha=box_alpha),
-                    fliersize=0 if show_points else 3)
-        code_lines.append(f"sns.boxplot(data=sub_df, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, palette='{palette_name}', boxprops=dict(alpha={box_alpha}))")
+        if hue_col:
+            sns.boxplot(data=sub_df, x=x_col, y=y_col, hue=hue_col,
+                        palette=colors, ax=ax, boxprops=dict(alpha=box_alpha),
+                        fliersize=0 if show_points else 3)
+            code_lines.append(f"sns.boxplot(data=sub_df, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, palette='{palette_name}', boxprops=dict(alpha={box_alpha}))")
+        else:
+            sns.boxplot(data=sub_df, x=x_col, y=y_col, hue=x_col,
+                        palette=colors, ax=ax, legend=False, boxprops=dict(alpha=box_alpha),
+                        fliersize=0 if show_points else 3)
+            code_lines.append(f"sns.boxplot(data=sub_df, x='{x_col}', y='{y_col}', hue='{x_col}', palette='{palette_name}', legend=False, boxprops=dict(alpha={box_alpha}))")
     elif "Violin" in plot_type:
-        sns.violinplot(data=sub_df, x=x_col, y=y_col, hue=hue_col,
-                       palette=colors, ax=ax, cut=0, inner="quartile",
-                       alpha=box_alpha)
-        code_lines.append(f"sns.violinplot(data=sub_df, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, palette='{palette_name}', cut=0, inner='quartile')")
+        if hue_col:
+            sns.violinplot(data=sub_df, x=x_col, y=y_col, hue=hue_col,
+                           palette=colors, ax=ax, cut=0, inner="quartile",
+                           alpha=box_alpha)
+            code_lines.append(f"sns.violinplot(data=sub_df, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, palette='{palette_name}', cut=0, inner='quartile')")
+        else:
+            sns.violinplot(data=sub_df, x=x_col, y=y_col, hue=x_col,
+                           palette=colors, ax=ax, cut=0, inner="quartile",
+                           legend=False, alpha=box_alpha)
+            code_lines.append(f"sns.violinplot(data=sub_df, x='{x_col}', y='{y_col}', hue='{x_col}', palette='{palette_name}', legend=False, cut=0, inner='quartile')")
     
     if show_points and ("Jitter" in plot_type or plot_type == "Strip Plot Only"):
-        sns.stripplot(data=sub_df, x=x_col, y=y_col, hue=hue_col,
-                      palette=['#222222'] if not hue_col else colors,
-                      ax=ax, jitter=0.25, size=jitter_size, alpha=jitter_alpha,
-                      dodge=True if hue_col else False)
-        code_lines.append(f"sns.stripplot(data=sub_df, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, jitter=0.25, size={jitter_size}, alpha={jitter_alpha}, dodge={bool(hue_col)})")
+        if hue_col:
+            sns.stripplot(data=sub_df, x=x_col, y=y_col, hue=hue_col,
+                          palette=colors, ax=ax, jitter=0.25, size=jitter_size, alpha=jitter_alpha,
+                          dodge=True)
+            code_lines.append(f"sns.stripplot(data=sub_df, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, jitter=0.25, size={jitter_size}, alpha={jitter_alpha}, dodge=True)")
+        else:
+            sns.stripplot(data=sub_df, x=x_col, y=y_col, color='#222222',
+                          ax=ax, jitter=0.25, size=jitter_size, alpha=jitter_alpha)
+            code_lines.append(f"sns.stripplot(data=sub_df, x='{x_col}', y='{y_col}', color='#222222', jitter=0.25, size={jitter_size}, alpha={jitter_alpha})")
 
     apply_plot_customizations(ax, fig, title=title or f"{y_col} across {x_col}",
                               xlabel=xlabel or x_col, ylabel=ylabel or y_col,
@@ -551,8 +562,12 @@ def create_bar_error_plot(df: pd.DataFrame, x_col: str, y_col: str,
     sub = df.dropna(subset=[x_col, y_col] + ([hue_col] if hue_col else [])).copy()
     sub[x_col] = sub[x_col].astype(str)
     
-    sns.barplot(data=sub, x=x_col, y=y_col, hue=hue_col, palette=colors,
-                errorbar=errorbar, capsize=0.15, err_kws={'linewidth': 1.5}, ax=ax, alpha=0.9)
+    if hue_col:
+        sns.barplot(data=sub, x=x_col, y=y_col, hue=hue_col, palette=colors,
+                    errorbar=errorbar, capsize=0.15, err_kws={'linewidth': 1.5}, ax=ax, alpha=0.9)
+    else:
+        sns.barplot(data=sub, x=x_col, y=y_col, hue=x_col, palette=colors, legend=False,
+                    errorbar=errorbar, capsize=0.15, err_kws={'linewidth': 1.5}, ax=ax, alpha=0.9)
     
     eb_label = "Mean ± SEM" if errorbar == "se" else "Mean ± SD"
     apply_plot_customizations(ax, fig, title=title or f"{y_col} by {x_col} ({eb_label})",

@@ -94,11 +94,12 @@ with st.sidebar:
                 st.error(f"讀取失敗: {e}")
     else:
         sample_options = {
+            "植物生長試驗 (anova plant growth.xlsx)": "sample_data/anova_plant_growth.xlsx",
             "臨床試驗隊列 (Clinical Trial Cohort)": "sample_data/clinical_trial_data.xlsx",
             "癌症存活追蹤數據 (Cancer Survival)": "sample_data/cancer_survival_data.xlsx",
             "基因差異表現 (Gene Expression Volcano)": "sample_data/gene_expression_volcano.xlsx"
         }
-        selected_sample = st.selectbox("選擇生醫示範數據", list(sample_options.keys()))
+        selected_sample = st.selectbox("選擇生醫示範數據", list(sample_options.keys()), index=0)
         sample_path = sample_options[selected_sample]
         if os.path.exists(sample_path):
             df_name = os.path.basename(sample_path)
