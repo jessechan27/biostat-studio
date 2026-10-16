@@ -71,7 +71,7 @@ if 'active_code' not in st.session_state:
 
 # Sidebar: Data Source & Selection
 with st.sidebar:
-    st.image("https://img.shields.io/badge/BioStat_Studio-v1.0.0-blue?style=for-the-badge&logo=python", use_container_width=True)
+    st.image("https://img.shields.io/badge/BioStat_Studio-v1.2.0-blue?style=for-the-badge&logo=python", use_container_width=True)
     st.header("📂 數據匯入中心")
     
     data_source = st.radio("資料來源", ["上傳自己的 Excel / CSV", "載入生醫範例資料庫"], index=1)
@@ -113,7 +113,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### 🛠️ 支援核心工具")
-    st.caption("• **Seaborn & Matplotlib** 出版級繪圖\n• **SciPy & Statsmodels** 生統檢定\n• **Lifelines** Kaplan-Meier 存活分析\n• 300/600 DPI 高解析 & 向量 SVG/PDF 匯出")
+    st.caption("• **統計決策精靈** 智慧引導適法統計\n• **完整分析報告** 自動產出醫學結論\n• **圖表尺度自由縮放** 線性/對數/範圍\n• **座標文字自訂** 標題/軸名/刻度字級\n• 300/600 DPI 高解析 & 向量 SVG/PDF 匯出")
 
 # Main Header
 st.markdown('<div class="main-header">🧬 BioStat Studio 生物統計分析與客製化繪圖平台</div>', unsafe_allow_html=True)
@@ -122,7 +122,7 @@ st.markdown('<div class="sub-header">整合 Excel 數據剖析、醫學統計推
 # Main Navigation Tabs
 tab_data, tab_stats, tab_plots, tab_code, tab_export = st.tabs([
     "📁 1. 數據管理 (Data Hub)",
-    "🧪 2. 生物統計分析 (Biostats)",
+    "🧪 2. 生物統計分析與完整報告 (Biostats)",
     "🎨 3. 視覺化圖表工坊 (Plot Studio)",
     "💻 4. 自訂代碼繪圖 (Python Code Lab)",
     "📦 5. 匯出與 GitHub 發佈 (Export & GitHub)"
@@ -182,26 +182,80 @@ with tab_data:
             st.success("✅ 數據完整無缺漏，所有欄位均無缺失值！")
 
 # ==============================================================================
-# TAB 2: 生物統計分析 (Biostats)
+# TAB 2: 生物統計分析與完整報告 (Biostats)
 # ==============================================================================
 with tab_stats:
-    st.subheader("🧪 生物統計分析與假設檢定")
-    stat_task = st.selectbox("選擇統計分析項目", [
+    # 智慧統計決策推薦精靈
+    with st.expander("🎯 智慧統計方法推薦決策精靈 (Statistical Method Advisor) — 點擊展開引導", expanded=False):
+        st.markdown("""
+        生醫研究中，正確使用統計方法至關重要。請選擇您的**研究分析目的**，系統將提供正規國際期刊認可的最佳統計檢定建議與適法性條件：
+        """)
+        ad_col1, ad_col2 = st.columns(2)
+        with ad_col1:
+            ad_goal = st.selectbox("您的研究目標是什麼？", [
+                "比較兩組獨立樣本差異 (例如：治療組 vs 對照組)",
+                "前後測配對樣本比較 (例如：同批患者用藥前 vs 用藥後)",
+                "比較三組以上多組樣本差異 (例如：安慰劑 vs 低劑量 vs 高劑量)",
+                "分析兩類別變項之關聯性 (例如：用藥組別與不良反應發生率)",
+                "分析病患存活時間與風險因子 (帶有 Censored 追蹤數據)",
+                "二元臨床預後預測 (例如：治療反應 有效 vs 無效)"
+            ])
+        with ad_col2:
+            st.markdown("##### 📌 統計學指引與前提條件")
+            if "兩組獨立" in ad_goal:
+                st.info("""
+                - **黃金標準**：若兩組皆符合**常態分佈**且**變異數齊一** ➔ **Student's t-test**。
+                - **變異數不齊一**：若常態但變異數不齊 (Levene's p < 0.05) ➔ **Welch's t-test** (自由度修正)。
+                - **偏態/非常態**：若偏離常態 (Shapiro-Wilk p < 0.05) ➔ **Mann-Whitney U 檢定** (無母數)。
+                """)
+            elif "前後測配對" in ad_goal:
+                st.info("""
+                - **黃金標準**：若前後測**差值符合常態分佈** ➔ **Paired t-test** (配對 t 檢定)。
+                - **偏態/非常態**：若差值不符常態 ➔ **Wilcoxon Signed-Rank Test** (符號等級檢定)。
+                """)
+            elif "三組以上" in ad_goal:
+                st.info("""
+                - **黃金標準**：符合常態與齊一 ➔ **One-way ANOVA** + **Tukey HSD 事後檢定**。
+                - **雙因子交互作用**：探討兩種因子 (如藥物×性別) ➔ **Two-way ANOVA**。
+                - **偏態/非常態**：偏態分佈 ➔ **Kruskal-Wallis 檢定**。
+                """)
+            elif "類別變項" in ad_goal:
+                st.info("""
+                - **格子期望值 ≥ 5** ➔ **皮爾森卡方檢定 (Chi-Square Test)**。
+                - **任一格子期望值 < 5** ➔ 必須採用 **費雪精確檢定 (Fisher's Exact Test)**。
+                """)
+            elif "存活時間" in ad_goal:
+                st.info("""
+                - **單變項曲線與組別比較** ➔ **Kaplan-Meier 估計量 + Log-Rank 檢定**。
+                - **多變項風險因子校正** ➔ **Cox 比例風險模型 (Cox PH)** 計算 Hazard Ratio (HR)。
+                """)
+            elif "二元臨床預後" in ad_goal:
+                st.info("""
+                - **二元疾病預測** ➔ **二元邏輯斯迴歸 (Logistic Regression)** 計算勝算比 (Odds Ratio, OR)。
+                """)
+
+    st.markdown("---")
+    
+    stat_task = st.selectbox("選擇統計分析方法", [
         "1. 敘述性統計與常態性檢定 (Descriptive Statistics & Shapiro-Wilk)",
         "2. 兩組獨立樣本差異檢定 (Two-Group: Student's t / Welch's t / Mann-Whitney U)",
-        "3. 多組單因子變異數分析 (Multi-Group: One-way ANOVA & Kruskal-Wallis)",
-        "4. 類別變項交叉列聯表 (Contingency: Chi-square / Fisher's Exact / OR)",
-        "5. 相關係數分析矩陣 (Correlation Matrix: Pearson / Spearman)",
-        "6. Kaplan-Meier 存活分析與 Log-Rank 檢定 (Survival Analysis)",
-        "7. 多元線性迴歸分析 (Linear Regression OLS)"
+        "3. 配對樣本前後測檢定 (Paired Samples: Paired t / Wilcoxon Signed-Rank) ⭐",
+        "4. 多組單因子變異數分析 (Multi-Group: One-way ANOVA & Kruskal-Wallis)",
+        "5. 雙因子變異數分析 (Two-way ANOVA with Interaction A*B) ⭐",
+        "6. 類別變項交叉列聯表 (Contingency: Chi-square / Fisher's Exact / Odds Ratio)",
+        "7. 相關係數分析矩陣 (Correlation Matrix: Pearson / Spearman / Kendall)",
+        "8. Kaplan-Meier 存活分析與 Log-Rank 檢定 (Survival Analysis)",
+        "9. Cox 比例風險迴歸模型 (Cox Proportional Hazards Regression) ⭐",
+        "10. 二元邏輯斯迴歸分析 (Binary Logistic Regression: Odds Ratios) ⭐",
+        "11. 多元線性迴歸分析 (Linear Regression OLS)"
     ])
     
     st.markdown("---")
     
     # 1. 敘述統計
     if "1. 敘述性統計" in stat_task:
-        st.markdown("##### 📌 數值變項敘述性統計 (Mean, SD, Median, IQR, Shapiro-Wilk 常態性檢定)")
-        selected_num_cols = st.multiselect("選取要分析的數值欄位", numeric_cols, default=numeric_cols[:min(5, len(numeric_cols))])
+        st.markdown("##### 📌 數值變項敘述性統計與常態性檢定 (Mean, SD, Median, IQR, Shapiro-Wilk)")
+        selected_num_cols = st.multiselect("選取要分析的數值欄位", numeric_cols, default=numeric_cols[:min(6, len(numeric_cols))])
         if selected_num_cols:
             desc_df = bs.calculate_descriptive_stats(df, selected_num_cols)
             st.dataframe(desc_df, use_container_width=True)
@@ -214,7 +268,7 @@ with tab_stats:
             
     # 2. 兩組比較
     elif "2. 兩組獨立樣本" in stat_task:
-        st.markdown("##### 📌 兩組差異檢定 (自動 Levene 齊一性檢定、t-test、Mann-Whitney U 與 Cohen's d)")
+        st.markdown("##### 📌 兩組差異檢定 (自動判定常態性與 Levene 齊一性，推薦 Student's / Welch's / Mann-Whitney)")
         c1, c2, c3 = st.columns(3)
         with c1:
             val_col = st.selectbox("分析數值變項 (Y)", numeric_cols)
@@ -223,11 +277,13 @@ with tab_stats:
             fallback_cats = categorical_cols if categorical_cols else all_cols
             grp_col = st.selectbox("分組變項 (恰好 2 組)", two_group_candidates if two_group_candidates else fallback_cats)
         with c3:
-            method_choice = st.selectbox("指定檢定方法", ["auto", "student_t", "welch_t", "mann_whitney"])
+            method_choice = st.selectbox("檢定方法", ["auto (依檢定假設自動推薦)", "student_t", "welch_t", "mann_whitney"])
             
-        if st.button("🚀 執行兩組檢定", type="primary"):
+        if st.button("🚀 執行兩組檢定並產出報告", type="primary"):
             try:
-                res = bs.two_group_comparison(df, val_col, grp_col, method_choice)
+                res = bs.two_group_comparison(df, val_col, grp_col, method_choice.split()[0])
+                
+                st.info(f"💡 **統計方法適法性診斷**：採用 `{res['檢定方法']}`。理由：{res['推薦依據']}")
                 
                 c_a, c_b, c_c = st.columns(3)
                 c_a.metric("檢定方法", res['檢定方法'])
@@ -237,8 +293,8 @@ with tab_stats:
                 
                 st.markdown("##### 📊 組別平均值與統計指標比較")
                 comp_table = pd.DataFrame([
-                    {"組別": res['組別 1 名稱'], "樣本數 N": res['組別 1 樣本數'], "Mean ± SD": f"{res['組別 1 平均值']} ± {res['組別 1 標準差']}", "Median (IQR)": f"{res['組別 1 中位數']} ({res['組別 1 IQR']})"},
-                    {"組別": res['組別 2 名稱'], "樣本數 N": res['組別 2 樣本數'], "Mean ± SD": f"{res['組別 2 平均值']} ± {res['組別 2 標準差']}", "Median (IQR)": f"{res['組別 2 中位數']} ({res['組別 2 IQR']})"}
+                    {"組別": res['組別 1 名稱'], "樣本數 N": res['組別 1 樣本數'], "Mean ± SD": f"{res['組別 1 平均值']} ± {res['組別 1 標準差']}", "Median (IQR)": f"{res['組別 1 中位數']} ({res['組別 1 IQR']})", "Shapiro 常態 p值": res['組別 1 常態 p值']},
+                    {"組別": res['組別 2 名稱'], "樣本數 N": res['組別 2 樣本數'], "Mean ± SD": f"{res['組別 2 平均值']} ± {res['組別 2 標準差']}", "Median (IQR)": f"{res['組別 2 中位數']} ({res['組別 2 IQR']})", "Shapiro 常態 p值": res['組別 2 常態 p值']}
                 ])
                 st.table(comp_table)
                 
@@ -247,12 +303,54 @@ with tab_stats:
                 - **效果值 (Cohen's d)**: `{res['Cohen d 效果值']}`
                 - **變異數齊一性 (Levene's p)**: `{res['Levene 檢定 p值']}` ({'齊一' if res['變異數齊一'] else '不齊一'})
                 """)
+                
+                # Full Clinical Report
+                rep_md = bs.generate_clinical_report("two_group", res, f"{val_col} 在 {grp_col} 間之組別差異")
+                with st.expander("📄 查看完整醫學統計分析報告 (Structured Clinical Report)", expanded=True):
+                    st.markdown(rep_md)
+                    st.download_button("📥 下載完整分析報告 (Markdown 格式)", rep_md.encode('utf-8'), f"Report_TwoGroup_{val_col}.md", "text/markdown")
             except Exception as e:
                 st.error(f"檢定過程出錯: {e}")
 
-    # 3. 多組 ANOVA
-    elif "3. 多組單因子" in stat_task:
-        st.markdown("##### 📌 多組比較 (One-way ANOVA、Kruskal-Wallis 與 Tukey HSD 事後多重比較)")
+    # 3. 配對樣本前後測
+    elif "3. 配對樣本前後測" in stat_task:
+        st.markdown("##### 📌 配對樣本檢定 (前後測配對 t-test / 威爾卡森符號等級檢定 Wilcoxon)")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            pre_c = st.selectbox("前測數值變項 (Pre)", numeric_cols, index=0)
+        with c2:
+            post_c = st.selectbox("後測數值變項 (Post)", [c for c in numeric_cols if c != pre_c], index=0)
+        with c3:
+            p_method = st.selectbox("檢定方法", ["auto (自動依差值常態性判定)", "paired_t", "wilcoxon"])
+            
+        if st.button("🚀 執行前後測配對檢定", type="primary"):
+            try:
+                p_res = bs.paired_samples_comparison(df, pre_c, post_c, p_method.split()[0])
+                st.info(f"💡 **適法性引導**：採用 `{p_res['檢定方法']}`。理由：{p_res['推薦依據']}")
+                
+                c_a, c_b, c_c = st.columns(3)
+                c_a.metric("配對樣本數", f"{p_res['配對樣本數 (N)']} 筆")
+                c_b.metric("平均差值 (Post - Pre)", f"{p_res['平均差值 (Post - Pre)']}")
+                p_disp = f"{p_res['p值']:.4e}" if p_res['p值'] < 0.001 else f"{p_res['p值']:.4f}"
+                c_c.metric("檢定 p 值", p_disp, delta="顯著差異 (p<0.05)" if p_res['顯著性 (p < 0.05)'] else "無顯著差異")
+                
+                st.markdown(f"""
+                - **前測 Baseline**: `{p_res['前測 Mean ± SD']}` | **後測 Post**: `{p_res['後測 Mean ± SD']}`
+                - **差值 95% 信賴區間**: `{p_res['差值 95% 信賴區間']}`
+                - **配對效果值 (Cohen dz)**: `{p_res['配對效果值 (Cohen dz)']}`
+                - **差值常態性檢定 (Shapiro-Wilk p)**: `{p_res['差值常態性檢定 p值']}`
+                """)
+                
+                p_rep = bs.generate_clinical_report("paired", p_res, f"{pre_c} 與 {post_c} 前後測配對檢定")
+                with st.expander("📄 查看完整配對檢定醫學報告", expanded=True):
+                    st.markdown(p_rep)
+                    st.download_button("📥 下載配對分析報告", p_rep.encode('utf-8'), f"Report_Paired_{pre_c}_{post_c}.md", "text/markdown")
+            except Exception as e:
+                st.error(f"配對檢定出錯: {e}")
+
+    # 4. 多組 ANOVA
+    elif "4. 多組單因子" in stat_task:
+        st.markdown("##### 📌 多組單因子比較 (One-way ANOVA、Kruskal-Wallis 與 Tukey HSD 事後多重比較)")
         c1, c2 = st.columns(2)
         with c1:
             val_col = st.selectbox("分析數值變項 (Y)", numeric_cols, key="anova_val")
@@ -268,6 +366,8 @@ with tab_stats:
                 p_disp = f"{res['ANOVA p 值']:.4e}" if res['ANOVA p 值'] < 0.001 else f"{res['ANOVA p 值']:.4f}"
                 c_c.metric("ANOVA p 值", p_disp, delta="組間有顯著差異" if res['ANOVA 顯著性 (p < 0.05)'] else "無顯著差異")
                 
+                st.markdown("##### 📊 各組數值統計摘要")
+                st.dataframe(res['各組摘要'], use_container_width=True)
                 st.markdown(f"**非參數 Kruskal-Wallis H**: `{res['Kruskal-Wallis H 值']:.4f}` (p = `{res['Kruskal-Wallis p 值']:.4e}`)")
                 
                 if res['Tukey HSD 事後檢定'] is not None and not res['Tukey HSD 事後檢定'].empty:
@@ -276,9 +376,38 @@ with tab_stats:
             except Exception as e:
                 st.error(f"分析失敗: {e}")
 
-    # 4. 列聯表卡方
-    elif "4. 類別變項" in stat_task:
-        st.markdown("##### 📌 列聯表與卡方檢定 (Chi-square / Fisher's Exact / OR)")
+    # 5. 雙因子變異數分析 (Two-Way ANOVA)
+    elif "5. 雙因子變異數分析" in stat_task:
+        st.markdown("##### 📌 雙因子變異數分析 (Two-Way ANOVA：分析因子 A、因子 B 與交互作用 A × B)")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            y_col_2w = st.selectbox("數值應變項 (Y)", numeric_cols, key="2w_y")
+        with c2:
+            f1_col = st.selectbox("自變項因子 1 (Factor A)", categorical_cols if categorical_cols else all_cols, key="2w_f1")
+        with c3:
+            f2_col = st.selectbox("自變項因子 2 (Factor B)", [c for c in (categorical_cols if categorical_cols else all_cols) if c != f1_col], key="2w_f2")
+            
+        if st.button("🚀 執行雙因子 ANOVA", type="primary"):
+            try:
+                res_2w = bs.two_way_anova(df, y_col_2w, f1_col, f2_col)
+                st.metric("模型決定係數 (R²)", f"{res_2w['r_squared']:.4f}")
+                st.markdown("##### 📋 雙因子 ANOVA 變異數分析表")
+                st.dataframe(res_2w['anova_table'], use_container_width=True)
+                
+                # Check interaction significance
+                inter_idx = f"交互作用: {f1_col} × {f2_col}"
+                if inter_idx in res_2w['anova_table'].index:
+                    is_inter_sig = res_2w['anova_table'].loc[inter_idx, '顯著性 (p < 0.05)']
+                    if is_inter_sig:
+                        st.warning(f"💡 觀察到 `{f1_col}` 與 `{f2_col}` 之間存在統計學**顯著交互作用** (p < 0.05)，表示因子 A 的效果會隨著因子 B 的組別而改變！")
+                    else:
+                        st.success(f"✅ 交互作用未達顯著水準 (p ≥ 0.05)，可分別檢驗兩因子的獨立主效應。")
+            except Exception as e:
+                st.error(f"雙因子分析出錯: {e}")
+
+    # 6. 列聯表卡方
+    elif "6. 類別變項" in stat_task:
+        st.markdown("##### 📌 列聯表與卡方檢定 (Chi-square / Fisher's Exact / Odds Ratio)")
         c1, c2 = st.columns(2)
         with c1:
             r_col = st.selectbox("橫列變項 (Row Variable)", categorical_cols if categorical_cols else all_cols, key="chi_row")
@@ -288,6 +417,8 @@ with tab_stats:
         if st.button("🚀 執行卡方檢定", type="primary"):
             try:
                 res = bs.contingency_analysis(df, r_col, c_col)
+                st.info(f"💡 {res['適法性診斷']}")
+                
                 st.markdown("##### 📊 交叉次數列聯表 (Observed Frequencies)")
                 st.dataframe(res['觀察頻次列聯表'], use_container_width=True)
                 
@@ -298,30 +429,30 @@ with tab_stats:
                 cc.metric("卡方 p 值", p_txt, delta="關聯顯著 (p<0.05)" if res['顯著性 (p < 0.05)'] else "無顯著關聯")
                 
                 if res.get('Fisher Exact p 值') is not None:
-                    st.info(f"💡 2x2 列聯表費雪精確檢定 (Fisher's Exact p): `{res['Fisher Exact p 值']:.4e}` | 勝算比 (Odds Ratio): `{res['Odds Ratio']}`")
+                    st.success(f"💡 2x2 列聯表費雪精確檢定 (Fisher's Exact p): `{res['Fisher Exact p 值']:.4e}` | 勝算比 (Odds Ratio): `{res['Odds Ratio']}`")
             except Exception as e:
                 st.error(f"檢定出錯: {e}")
 
-    # 5. 相關矩陣
-    elif "5. 相關係數" in stat_task:
+    # 7. 相關矩陣
+    elif "7. 相關係數" in stat_task:
         st.markdown("##### 📌 相關分析 (Pearson / Spearman 矩陣與雙尾 p-value)")
         c1, c2 = st.columns([1, 3])
         with c1:
-            corr_m = st.radio("相關係數類型", ["pearson", "spearman"])
+            corr_m = st.radio("相關係數類型", ["pearson", "spearman", "kendall"])
         with c2:
             corr_cols = st.multiselect("選取相關分析欄位", numeric_cols, default=numeric_cols[:min(6, len(numeric_cols))])
             
         if len(corr_cols) >= 2:
-            r_df, p_df, n_df = bs.correlation_matrix(df, corr_cols, corr_m)
+            r_df, p_df, pairs_df = bs.correlation_matrix(df, corr_cols, corr_m)
             st.markdown("##### 相關係數矩陣 (r)")
             st.dataframe(r_df.style.background_gradient(cmap='coolwarm', vmin=-1, vmax=1).format("{:.3f}"), use_container_width=True)
-            st.markdown("##### 雙尾檢定 p 值矩陣")
-            st.dataframe(p_df.style.format("{:.4e}"), use_container_width=True)
+            st.markdown("##### 兩兩顯著相關排序表")
+            st.dataframe(pairs_df, use_container_width=True)
         else:
             st.warning("請選取至少 2 個數值欄位。")
 
-    # 6. 生存分析
-    elif "6. Kaplan-Meier" in stat_task:
+    # 8. 生存分析
+    elif "8. Kaplan-Meier" in stat_task:
         st.markdown("##### 📌 生存分析 (Kaplan-Meier 估計量與 Log-Rank 檢定)")
         c1, c2, c3 = st.columns(3)
         with c1:
@@ -347,8 +478,52 @@ with tab_stats:
             except Exception as e:
                 st.error(f"存活分析錯誤: {e}")
 
-    # 7. 線性迴歸
-    elif "7. 多元線性迴歸" in stat_task:
+    # 9. Cox 比例風險模型
+    elif "9. Cox 比例風險" in stat_task:
+        st.markdown("##### 📌 Cox 比例風險迴歸模型 (計算各風險因子之 Hazard Ratio, 95% CI 與 Wald 檢定)")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            cx_t = st.selectbox("存活時間 (Time)", numeric_cols, key="cox_t")
+        with c2:
+            cx_e = st.selectbox("事件狀態 (Event: 1/0)", numeric_cols if numeric_cols else all_cols, key="cox_e")
+        with c3:
+            candidate_covs = [c for c in all_cols if c not in [cx_t, cx_e]]
+            cx_covs = st.multiselect("共變量危險因子 (Covariates)", candidate_covs, default=candidate_covs[:min(4, len(candidate_covs))])
+            
+        if cx_covs and st.button("🚀 擬合 Cox PH 模型", type="primary"):
+            try:
+                cox_res = bs.fit_cox_ph(df, cx_t, cx_e, cx_covs)
+                c1, c2, c3 = st.columns(3)
+                c1.metric("C-Index (模型鑑別力)", f"{cox_res['c_index']:.3f}")
+                c2.metric("有效樣本數 / 事件數", f"{cox_res['n_obs']} / {cox_res['n_events']}")
+                c3.metric("對數概似值 (Log-Likelihood)", f"{cox_res['log_likelihood']}")
+                
+                st.markdown("##### 📋 Cox 危害比 (Hazard Ratio) 與 95% 信賴區間")
+                st.dataframe(cox_res['coef_table'], use_container_width=True)
+            except Exception as e:
+                st.error(f"Cox 模型擬合出錯: {e}")
+
+    # 10. 二元邏輯斯迴歸
+    elif "10. 二元邏輯斯" in stat_task:
+        st.markdown("##### 📌 二元邏輯斯迴歸分析 (Binary Logistic Regression：計算勝算比 Odds Ratio 與 95% CI)")
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            two_val_cols = [c for c in all_cols if df[c].dropna().nunique() == 2]
+            log_y = st.selectbox("二元應變項 (Y, 2種狀態)", two_val_cols if two_val_cols else all_cols, key="log_y")
+        with c2:
+            log_xs = st.multiselect("預測變項 (X)", [c for c in all_cols if c != log_y], default=[c for c in numeric_cols if c != log_y][:min(3, len(numeric_cols))])
+            
+        if log_xs and st.button("🚀 擬合邏輯斯迴歸模型", type="primary"):
+            try:
+                log_res = bs.fit_logistic_regression(df, log_y, log_xs)
+                st.metric("McFadden's Pseudo R²", f"{log_res['pseudo_r2']:.4f}")
+                st.markdown("##### 📋 邏輯斯迴歸係數與勝算比 (Odds Ratio) 表")
+                st.dataframe(log_res['coef_table'], use_container_width=True)
+            except Exception as e:
+                st.error(f"邏輯斯迴歸出錯: {e}")
+
+    # 11. 線性迴歸
+    elif "11. 多元線性" in stat_task:
         st.markdown("##### 📌 多元線性迴歸分析 (OLS Regression)")
         c1, c2 = st.columns([1, 2])
         with c1:
@@ -373,7 +548,7 @@ with tab_stats:
 # TAB 3: 視覺化圖表工坊 (Plot Studio)
 # ==============================================================================
 with tab_plots:
-    st.subheader("🎨 出版級生醫視覺化圖表工坊")
+    st.subheader("🎨 出版級生醫視覺化圖表工坊 (全自訂 X/Y 尺度與字級)")
     
     col_ctrl, col_view = st.columns([1.1, 2.2])
     
@@ -391,7 +566,6 @@ with tab_plots:
         ])
         
         st.markdown("#### 2. 變項配置")
-        # Dynamic variable selectors
         if "Box / Violin" in plot_type:
             pt_mode = st.radio("繪製子型態", ["Boxplot + Jitter", "Violin Plot", "Strip Plot Only"], horizontal=True)
             px = st.selectbox("X 軸 (分組類別)", categorical_cols if categorical_cols else all_cols)
@@ -433,15 +607,48 @@ with tab_plots:
             pca_features = st.multiselect("選取 PCA 特徵欄位 (≥2)", numeric_cols, default=numeric_cols[:min(8, len(numeric_cols))])
             pca_label = st.selectbox("標籤著色欄位 (選填)", [None] + categorical_cols)
 
-        st.markdown("#### 3. 🎨 視覺美學客製化")
-        with st.expander("展開圖表版面與調色設定", expanded=True):
+        st.markdown("#### 3. 🎨 視覺美學與座標軸客製化")
+        
+        with st.expander("📐 座標軸尺度與數值範圍 (X/Y Scale & Limits)", expanded=True):
+            col_sc1, col_sc2 = st.columns(2)
+            with col_sc1:
+                x_scale_opt = st.selectbox("X 軸尺度 (Scale)", ["linear (線性)", "log (對數 Log10)"])
+                x_scale_val = "log" if "log" in x_scale_opt else "linear"
+                x_custom_lim = st.checkbox("自訂 X 軸數值範圍", value=False)
+                x_min, x_max = None, None
+                if x_custom_lim:
+                    x_c1, x_c2 = st.columns(2)
+                    x_min = x_c1.number_input("X 軸最小值", value=0.0)
+                    x_max = x_c2.number_input("X 軸最大值", value=100.0)
+            with col_sc2:
+                y_scale_opt = st.selectbox("Y 軸尺度 (Scale)", ["linear (線性)", "log (對數 Log10)"])
+                y_scale_val = "log" if "log" in y_scale_opt else "linear"
+                y_custom_lim = st.checkbox("自訂 Y 軸數值範圍", value=False)
+                y_min, y_max = None, None
+                if y_custom_lim:
+                    y_c1, y_c2 = st.columns(2)
+                    y_min = y_c1.number_input("Y 軸最小值", value=0.0)
+                    y_max = y_c2.number_input("Y 軸最大值", value=100.0)
+
+        with st.expander("🔤 座標文字大小與標籤 (Font Sizes & Labels)", expanded=True):
+            custom_title = st.text_input("自訂圖表主標題", "")
+            title_fsize = st.slider("標題文字大小 (Title Font Size)", 10, 26, 14)
+            
+            c_lbl1, c_lbl2 = st.columns(2)
+            custom_xlabel = c_lbl1.text_input("自訂 X 軸標籤", "")
+            custom_ylabel = c_lbl2.text_input("自訂 Y 軸標籤", "")
+            label_fsize = st.slider("軸標籤文字大小 (Label Font Size)", 8, 22, 12)
+            
+            c_tk1, c_tk2 = st.columns(2)
+            tick_fsize = c_tk1.slider("刻度文字大小 (Tick Font Size)", 6, 20, 10)
+            tick_rot = c_tk2.selectbox("X 軸刻度文字旋轉", [0, 30, 45, 90], index=0)
+            show_grid_opt = st.checkbox("顯示網格輔助線 (Grid)", value=True)
+
+        with st.expander("📏 畫布尺寸與頂級期刊配色", expanded=False):
             palette_opt = st.selectbox("科學期刊調色盤 (Palette)", list(pb.PALETTES.keys()), index=0)
             fig_w = st.slider("畫布寬度 (Width)", 4.0, 16.0, 8.0, step=0.5)
             fig_h = st.slider("畫布高度 (Height)", 3.0, 12.0, 6.0, step=0.5)
             fig_dpi = st.select_slider("匯出解析度 (DPI)", options=[100, 150, 300, 600], value=300)
-            custom_title = st.text_input("自訂圖表主標題 (選填)", "")
-            custom_xlabel = st.text_input("自訂 X 軸標籤 (選填)", "")
-            custom_ylabel = st.text_input("自訂 Y 軸標籤 (選填)", "")
 
     # Right Column: Plot Rendering and Code Display
     with col_view:
@@ -450,30 +657,53 @@ with tab_plots:
         
         try:
             figsize = (fig_w, fig_h)
+            xlim_param = (x_min, x_max) if x_custom_lim else None
+            ylim_param = (y_min, y_max) if y_custom_lim else None
+
             if "Box / Violin" in plot_type:
                 fig, generated_code = pb.create_group_distribution_plot(
                     df, px, py, phue, plot_type=pt_mode, palette_name=palette_opt,
                     figsize=figsize, dpi=fig_dpi, title=custom_title,
-                    xlabel=custom_xlabel, ylabel=custom_ylabel
+                    xlabel=custom_xlabel, ylabel=custom_ylabel,
+                    title_fontsize=title_fsize, label_fontsize=label_fsize,
+                    xtick_fontsize=tick_fsize, ytick_fontsize=tick_fsize,
+                    tick_rotation=tick_rot, show_grid=show_grid_opt,
+                    xlim=xlim_param, ylim=ylim_param,
+                    xscale=x_scale_val, yscale=y_scale_val
                 )
             elif "Survival Curve" in plot_type:
                 fig, generated_code = pb.create_survival_plot(
                     df, ptime, pevt, pgrp, palette_name=palette_opt,
                     figsize=figsize, dpi=fig_dpi, title=custom_title or "Kaplan-Meier Survival Analysis",
+                    xlabel=custom_xlabel, ylabel=custom_ylabel,
+                    title_fontsize=title_fsize, label_fontsize=label_fsize,
+                    xtick_fontsize=tick_fsize, ytick_fontsize=tick_fsize,
+                    tick_rotation=tick_rot, show_grid=show_grid_opt,
+                    xlim=xlim_param, ylim=ylim_param,
+                    xscale=x_scale_val, yscale=y_scale_val,
                     show_ci=pci, show_median=pmed
                 )
             elif "Volcano Plot" in plot_type:
                 fig, generated_code = pb.create_volcano_plot(
                     df, pfc, ppval, pgene, fc_threshold=fc_th, pval_threshold=pval_th,
                     palette_name=palette_opt, figsize=figsize, dpi=fig_dpi,
-                    title=custom_title or "Volcano Plot (Differential Expression)"
+                    title=custom_title or "Volcano Plot (Differential Expression)",
+                    xlabel=custom_xlabel, ylabel=custom_ylabel,
+                    title_fontsize=title_fsize, label_fontsize=label_fsize,
+                    xtick_fontsize=tick_fsize, ytick_fontsize=tick_fsize,
+                    tick_rotation=tick_rot, show_grid=show_grid_opt,
+                    xlim=xlim_param, ylim=ylim_param,
+                    xscale=x_scale_val, yscale=y_scale_val
                 )
             elif "Correlation Heatmap" in plot_type:
                 if len(p_corr_cols) >= 2:
                     fig, generated_code = pb.create_correlation_heatmap(
                         df, p_corr_cols, method=p_corr_m, palette_name=palette_opt,
                         figsize=figsize, dpi=fig_dpi, annot=p_annot,
-                        title=custom_title or "Correlation Heatmap"
+                        title=custom_title or "Correlation Heatmap",
+                        title_fontsize=title_fsize,
+                        xtick_fontsize=tick_fsize, ytick_fontsize=tick_fsize,
+                        tick_rotation=tick_rot if tick_rot != 0 else 45
                     )
                 else:
                     st.warning("相關熱圖需要選取至少 2 個數值欄位。")
@@ -481,25 +711,49 @@ with tab_plots:
                 fig, generated_code = pb.create_scatter_regression_plot(
                     df, ps_x, ps_y, ps_hue, palette_name=palette_opt,
                     figsize=figsize, dpi=fig_dpi, show_ci=ps_ci,
-                    title=custom_title or f"{ps_y} vs {ps_x}"
+                    title=custom_title or f"{ps_y} vs {ps_x}",
+                    xlabel=custom_xlabel, ylabel=custom_ylabel,
+                    title_fontsize=title_fsize, label_fontsize=label_fsize,
+                    xtick_fontsize=tick_fsize, ytick_fontsize=tick_fsize,
+                    tick_rotation=tick_rot, show_grid=show_grid_opt,
+                    xlim=xlim_param, ylim=ylim_param,
+                    xscale=x_scale_val, yscale=y_scale_val
                 )
             elif "Bar + SEM/SD" in plot_type:
                 err_param = "se" if "se" in pb_err else "sd"
                 fig, generated_code = pb.create_bar_error_plot(
                     df, pb_x, pb_y, pb_hue, errorbar=err_param, palette_name=palette_opt,
-                    figsize=figsize, dpi=fig_dpi, title=custom_title or f"{pb_y} by {pb_x}"
+                    figsize=figsize, dpi=fig_dpi, title=custom_title or f"{pb_y} by {pb_x}",
+                    xlabel=custom_xlabel, ylabel=custom_ylabel,
+                    title_fontsize=title_fsize, label_fontsize=label_fsize,
+                    xtick_fontsize=tick_fsize, ytick_fontsize=tick_fsize,
+                    tick_rotation=tick_rot, show_grid=show_grid_opt,
+                    xlim=xlim_param, ylim=ylim_param,
+                    xscale=x_scale_val, yscale=y_scale_val
                 )
             elif "Histogram + KDE" in plot_type:
                 fig, generated_code = pb.create_distribution_plot(
                     df, ph_col, ph_hue, bins=ph_bins, show_kde=ph_kde,
                     palette_name=palette_opt, figsize=figsize, dpi=fig_dpi,
-                    title=custom_title or f"Distribution of {ph_col}"
+                    title=custom_title or f"Distribution of {ph_col}",
+                    xlabel=custom_xlabel, ylabel=custom_ylabel,
+                    title_fontsize=title_fsize, label_fontsize=label_fsize,
+                    xtick_fontsize=tick_fsize, ytick_fontsize=tick_fsize,
+                    tick_rotation=tick_rot, show_grid=show_grid_opt,
+                    xlim=xlim_param, ylim=ylim_param,
+                    xscale=x_scale_val, yscale=y_scale_val
                 )
             elif "PCA Biplot" in plot_type:
                 if len(pca_features) >= 2:
                     fig, generated_code = pb.create_pca_plot(
                         df, pca_features, pca_label, palette_name=palette_opt,
-                        figsize=figsize, dpi=fig_dpi, title=custom_title or "PCA Projection"
+                        figsize=figsize, dpi=fig_dpi, title=custom_title or "PCA Projection",
+                        xlabel=custom_xlabel, ylabel=custom_ylabel,
+                        title_fontsize=title_fsize, label_fontsize=label_fsize,
+                        xtick_fontsize=tick_fsize, ytick_fontsize=tick_fsize,
+                        tick_rotation=tick_rot, show_grid=show_grid_opt,
+                        xlim=xlim_param, ylim=ylim_param,
+                        xscale=x_scale_val, yscale=y_scale_val
                     )
                 else:
                     st.warning("PCA 降維投影需要至少 2 個數值變項。")
@@ -586,7 +840,6 @@ with tab_export:
         st.markdown("#### 1. 數據與清洗結果匯出")
         st.write("您可以下載當前已載入並整理完畢的資料集：")
         
-        # Buffer to excel
         excel_buf = io.BytesIO()
         with pd.ExcelWriter(excel_buf, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='BioStat_Data')
@@ -607,28 +860,15 @@ streamlit run app.py
 """, language="bash")
 
     st.markdown("---")
-    st.markdown("#### 3. 🚀 發佈至 GitHub Repository 步驟指南")
+    st.markdown("#### 3. 🚀 發佈至 GitHub Repository")
     st.markdown("""
-    在您當前專案資料夾 (`c:\\Users\\james\\Downloads\\test2`)，執行以下 Git 命令即可推送到您的 GitHub 儲存庫：
+    本專案已成功綁定遠端儲存庫 **[https://github.com/jessechan27/biostat-studio.git](https://github.com/jessechan27/biostat-studio.git)**。
+    若您在本地有新更動，執行以下命令即可推送更新：
     """)
     
-    st.code("""# 1. 初始化 Git 倉庫
-git init
-
-# 2. 將所有檔案加入暫存區
-git add .
-
-# 3. 提交首次版本
-git commit -m "feat: initial commit of BioStat Studio web app"
-
-# 4. 建立 main 分支
-git branch -M main
-
-# 5. 連接您的遠端 GitHub 倉庫 (請將 <your-username>/<repo-name> 換成您的 GitHub 專案網址)
-git remote add origin https://github.com/<your-username>/<repo-name>.git
-
-# 6. 推送至 GitHub
-git push -u origin main
+    st.code("""git add .
+git commit -m "feat: enhance biostats methods, report generator, and axis customization"
+git push origin main
 """, language="bash")
     
-    st.info("💡 **免費雲端部署建議**：上傳至 GitHub 後，您可以直接前往 [Streamlit Community Cloud](https://share.streamlit.io/) 點擊 'Deploy an app'，選取您的 GitHub 儲存庫與 `app.py`，即可一鍵免費獲得全公開的生醫統計分析雲端網站！")
+    st.info("💡 **免費雲端部署**：上傳至 GitHub 後，您可以直接前往 [Streamlit Community Cloud](https://share.streamlit.io/) 點擊 'Deploy an app'，選取您的 GitHub 儲存庫與 `app.py`，即可一鍵免費獲得公開生醫分析雲端網站！")

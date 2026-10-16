@@ -30,7 +30,6 @@ def get_color_list(palette_name: str, n_colors: int = 8) -> List[str]:
     if isinstance(pal, list):
         if n_colors <= len(pal):
             return pal[:n_colors]
-        # cycle if needed
         return [pal[i % len(pal)] for i in range(n_colors)]
     else:
         return sns.color_palette(pal, n_colors).as_hex()
@@ -43,9 +42,13 @@ def setup_matplotlib_style(theme: str = "whitegrid", font_scale: float = 1.0, fo
 
 def apply_plot_customizations(ax, fig, title: str = "", xlabel: str = "", ylabel: str = "",
                                title_fontsize: int = 14, label_fontsize: int = 12,
+                               xtick_fontsize: int = 10, ytick_fontsize: int = 10,
                                tick_rotation: int = 0, show_grid: bool = True,
-                               despine: bool = True):
-    """Apply standard title, label, tick, and spine customizations."""
+                               despine: bool = True,
+                               xlim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                               ylim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                               xscale: str = 'linear', yscale: str = 'linear'):
+    """Apply comprehensive title, label, scale limits, tick sizes, and axis scaling customizations."""
     if title:
         ax.set_title(title, fontsize=title_fontsize, pad=12, fontweight='bold')
     if xlabel:
@@ -53,13 +56,75 @@ def apply_plot_customizations(ax, fig, title: str = "", xlabel: str = "", ylabel
     if ylabel:
         ax.set_ylabel(ylabel, fontsize=label_fontsize, labelpad=8)
     
-    if tick_rotation != 0:
-        ax.tick_params(axis='x', rotation=tick_rotation)
+    # Scale adjustment
+    if xscale in ['linear', 'log']:
+        try:
+            ax.set_xscale(xscale)
+        except Exception:
+            pass
+    if yscale in ['linear', 'log']:
+        try:
+            ax.set_yscale(yscale)
+        except Exception:
+            pass
+
+    # Axis Limits
+    if xlim is not None:
+        xmin, xmax = xlim
+        if xmin is not None and xmax is not None and xmin < xmax:
+            ax.set_xlim(xmin, xmax)
+        elif xmin is not None:
+            ax.set_xlim(left=xmin)
+        elif xmax is not None:
+            ax.set_xlim(right=xmax)
+
+    if ylim is not None:
+        ymin, ymax = ylim
+        if ymin is not None and ymax is not None and ymin < ymax:
+            ax.set_ylim(ymin, ymax)
+        elif ymin is not None:
+            ax.set_ylim(bottom=ymin)
+        elif ymax is not None:
+            ax.set_ylim(top=ymax)
+
+    # Tick formatting & font sizes
+    ax.tick_params(axis='x', rotation=tick_rotation, labelsize=xtick_fontsize)
+    ax.tick_params(axis='y', labelsize=ytick_fontsize)
     
     ax.grid(show_grid, linestyle='--', alpha=0.5)
     if despine:
         sns.despine(ax=ax, top=True, right=True)
     fig.tight_layout()
+
+def generate_customization_code_lines(title: str, xlabel: str, ylabel: str,
+                                      title_fontsize: int, label_fontsize: int,
+                                      xtick_fontsize: int, ytick_fontsize: int,
+                                      tick_rotation: int, show_grid: bool,
+                                      xlim: Optional[Tuple[Optional[float], Optional[float]]],
+                                      ylim: Optional[Tuple[Optional[float], Optional[float]]],
+                                      xscale: str, yscale: str) -> List[str]:
+    """Helper to generate Python snippet for reproducibility."""
+    lines = []
+    if title:
+        lines.append(f"plt.title({repr(title)}, fontsize={title_fontsize}, fontweight='bold')")
+    if xlabel:
+        lines.append(f"plt.xlabel({repr(xlabel)}, fontsize={label_fontsize})")
+    if ylabel:
+        lines.append(f"plt.ylabel({repr(ylabel)}, fontsize={label_fontsize})")
+    if xscale == 'log':
+        lines.append("plt.xscale('log')")
+    if yscale == 'log':
+        lines.append("plt.yscale('log')")
+    if xlim and (xlim[0] is not None or xlim[1] is not None):
+        lines.append(f"plt.xlim({xlim[0]}, {xlim[1]})")
+    if ylim and (ylim[0] is not None or ylim[1] is not None):
+        lines.append(f"plt.ylim({ylim[0]}, {ylim[1]})")
+    lines.append(f"plt.tick_params(axis='x', rotation={tick_rotation}, labelsize={xtick_fontsize})")
+    lines.append(f"plt.tick_params(axis='y', labelsize={ytick_fontsize})")
+    lines.append(f"plt.grid({show_grid}, linestyle='--', alpha=0.5)")
+    lines.append("plt.tight_layout()")
+    lines.append("plt.show()")
+    return lines
 
 def fig_to_bytes(fig, format: str = 'png', dpi: int = 300) -> bytes:
     """Convert a Matplotlib figure into bytes for downloading."""
@@ -80,6 +145,16 @@ def create_group_distribution_plot(df: pd.DataFrame, x_col: str, y_col: str,
                                    title: str = "",
                                    xlabel: str = "",
                                    ylabel: str = "",
+                                   title_fontsize: int = 14,
+                                   label_fontsize: int = 12,
+                                   xtick_fontsize: int = 10,
+                                   ytick_fontsize: int = 10,
+                                   tick_rotation: int = 0,
+                                   show_grid: bool = True,
+                                   xlim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                                   ylim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                                   xscale: str = 'linear',
+                                   yscale: str = 'linear',
                                    box_alpha: float = 0.8,
                                    jitter_alpha: float = 0.6,
                                    jitter_size: float = 5.0,
@@ -95,7 +170,7 @@ def create_group_distribution_plot(df: pd.DataFrame, x_col: str, y_col: str,
         "import matplotlib.pyplot as plt",
         "import seaborn as sns",
         "",
-        "plt.figure(figsize=" + str(figsize) + ", dpi=" + str(dpi) + ")",
+        f"plt.figure(figsize={figsize}, dpi={dpi})",
         f"sub_df = df.dropna(subset=['{x_col}', '{y_col}'])"
     ]
 
@@ -118,16 +193,17 @@ def create_group_distribution_plot(df: pd.DataFrame, x_col: str, y_col: str,
         code_lines.append(f"sns.stripplot(data=sub_df, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, jitter=0.25, size={jitter_size}, alpha={jitter_alpha}, dodge={bool(hue_col)})")
 
     apply_plot_customizations(ax, fig, title=title or f"{y_col} across {x_col}",
-                              xlabel=xlabel or x_col, ylabel=ylabel or y_col)
+                              xlabel=xlabel or x_col, ylabel=ylabel or y_col,
+                              title_fontsize=title_fontsize, label_fontsize=label_fontsize,
+                              xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
+                              tick_rotation=tick_rotation, show_grid=show_grid,
+                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
     
-    code_lines.extend([
-        f"plt.title('{title or f'{y_col} across {x_col}'}', fontsize=14, fontweight='bold')",
-        f"plt.xlabel('{xlabel or x_col}')",
-        f"plt.ylabel('{ylabel or y_col}')",
-        "plt.tight_layout()",
-        "plt.show()"
-    ])
-    
+    code_lines.extend(generate_customization_code_lines(
+        title or f"{y_col} across {x_col}", xlabel or x_col, ylabel or y_col,
+        title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
+        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+    ))
     return fig, "\n".join(code_lines)
 
 # ==============================================================================
@@ -139,6 +215,18 @@ def create_survival_plot(df: pd.DataFrame, time_col: str, event_col: str,
                          figsize: Tuple[float, float] = (8.5, 6.0),
                          dpi: int = 300,
                          title: str = "Kaplan-Meier Survival Analysis",
+                         xlabel: str = "",
+                         ylabel: str = "",
+                         title_fontsize: int = 14,
+                         label_fontsize: int = 12,
+                         xtick_fontsize: int = 10,
+                         ytick_fontsize: int = 10,
+                         tick_rotation: int = 0,
+                         show_grid: bool = True,
+                         xlim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                         ylim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                         xscale: str = 'linear',
+                         yscale: str = 'linear',
                          show_ci: bool = True,
                          show_median: bool = True) -> Tuple[plt.Figure, str]:
     """Generate publication-ready Kaplan-Meier survival curves using lifelines."""
@@ -148,15 +236,6 @@ def create_survival_plot(df: pd.DataFrame, time_col: str, event_col: str,
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     colors = get_color_list(palette_name)
-    
-    code_lines = [
-        "import matplotlib.pyplot as plt",
-        "from lifelines import KaplanMeierFitter",
-        "from lifelines.statistics import logrank_test",
-        "",
-        "plt.figure(figsize=" + str(figsize) + ", dpi=" + str(dpi) + ")",
-        f"sub_df = df.dropna(subset=['{time_col}', '{event_col}'])"
-    ]
     
     sub_df = df.dropna(subset=[time_col, event_col])
     kmf = KaplanMeierFitter()
@@ -180,30 +259,34 @@ def create_survival_plot(df: pd.DataFrame, time_col: str, event_col: str,
                 med = kmf.median_survival_time_
                 if not np.isinf(med):
                     ax.axvline(med, color=col, linestyle=':', alpha=0.6)
-        
-        ax.set_title(title + p_val_text, fontsize=13, fontweight='bold')
+        final_title = (title or "Kaplan-Meier Survival Analysis") + p_val_text
     else:
         kmf.fit(sub_df[time_col], sub_df[event_col], label=f"All Patients (N={len(sub_df)})")
         kmf.plot_survival_function(ax=ax, ci_show=show_ci, color=colors[0], linewidth=2.2)
-        ax.set_title(title, fontsize=13, fontweight='bold')
+        final_title = title or "Kaplan-Meier Survival Analysis"
     
-    ax.set_xlabel(f"Time ({time_col})", fontsize=12)
-    ax.set_ylabel("Cumulative Survival Probability", fontsize=12)
-    ax.set_ylim(-0.02, 1.05)
-    ax.grid(True, linestyle='--', alpha=0.4)
-    sns.despine(ax=ax)
-    fig.tight_layout()
+    apply_plot_customizations(ax, fig, title=final_title,
+                              xlabel=xlabel or f"Time ({time_col})",
+                              ylabel=ylabel or "Cumulative Survival Probability",
+                              title_fontsize=title_fontsize, label_fontsize=label_fontsize,
+                              xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
+                              tick_rotation=tick_rotation, show_grid=show_grid,
+                              xlim=xlim, ylim=ylim if ylim else (-0.02, 1.05),
+                              xscale=xscale, yscale=yscale)
     
-    code_lines.extend([
+    code_lines = [
+        "import matplotlib.pyplot as plt",
+        "from lifelines import KaplanMeierFitter",
+        f"plt.figure(figsize={figsize}, dpi={dpi})",
+        f"sub_df = df.dropna(subset=['{time_col}', '{event_col}'])",
         "kmf = KaplanMeierFitter()",
-        "# Loop through groups and plot survival curves",
-        "plt.title('Kaplan-Meier Survival Curves')",
-        f"plt.xlabel('Time ({time_col})')",
-        "plt.ylabel('Survival Probability')",
-        "plt.tight_layout()",
-        "plt.show()"
-    ])
-    
+        "# Loop through groups and plot survival curves"
+    ]
+    code_lines.extend(generate_customization_code_lines(
+        final_title, xlabel or f"Time ({time_col})", ylabel or "Cumulative Survival Probability",
+        title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
+        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+    ))
     return fig, "\n".join(code_lines)
 
 # ==============================================================================
@@ -217,17 +300,27 @@ def create_volcano_plot(df: pd.DataFrame, log2fc_col: str, pval_col: str,
                         figsize: Tuple[float, float] = (8.5, 6.5),
                         dpi: int = 300,
                         title: str = "Volcano Plot (Differential Expression)",
+                        xlabel: str = "",
+                        ylabel: str = "",
+                        title_fontsize: int = 14,
+                        label_fontsize: int = 12,
+                        xtick_fontsize: int = 10,
+                        ytick_fontsize: int = 10,
+                        tick_rotation: int = 0,
+                        show_grid: bool = True,
+                        xlim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                        ylim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                        xscale: str = 'linear',
+                        yscale: str = 'linear',
                         top_genes: int = 8) -> Tuple[plt.Figure, str]:
     """Generate high-impact genomics Volcano Plot with threshold lines and gene labels."""
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     
     sub = df.dropna(subset=[log2fc_col, pval_col]).copy()
-    # Avoid log(0)
     sub[pval_col] = sub[pval_col].replace(0, 1e-300)
     sub['neg_log10_p'] = -np.log10(sub[pval_col])
     
-    # Classification
     conditions = [
         (sub[log2fc_col] >= fc_threshold) & (sub[pval_col] < pval_threshold),
         (sub[log2fc_col] <= -fc_threshold) & (sub[pval_col] < pval_threshold)
@@ -235,21 +328,19 @@ def create_volcano_plot(df: pd.DataFrame, log2fc_col: str, pval_col: str,
     sub['regulation'] = np.select(conditions, ['Up-regulated', 'Down-regulated'], default='Not Significant')
     
     palette_map = {
-        'Up-regulated': '#E64B35',     # Red
-        'Down-regulated': '#3C5488',   # Blue
-        'Not Significant': '#BCBDC0'   # Gray
+        'Up-regulated': '#E64B35',
+        'Down-regulated': '#3C5488',
+        'Not Significant': '#BCBDC0'
     }
     
     sns.scatterplot(data=sub, x=log2fc_col, y='neg_log10_p', hue='regulation',
                     palette=palette_map, alpha=0.75, s=35, ax=ax, edgecolor='none')
     
-    # Threshold dashed lines
     neg_p_thresh = -np.log10(pval_threshold)
     ax.axhline(neg_p_thresh, color='#555555', linestyle='--', linewidth=1.0, alpha=0.7)
     ax.axvline(fc_threshold, color='#555555', linestyle='--', linewidth=1.0, alpha=0.7)
     ax.axvline(-fc_threshold, color='#555555', linestyle='--', linewidth=1.0, alpha=0.7)
     
-    # Text annotation for top significant genes
     if gene_col and gene_col in sub.columns and top_genes > 0:
         sig_genes = sub[sub['regulation'] != 'Not Significant'].sort_values('neg_log10_p', ascending=False).head(top_genes)
         for _, row in sig_genes.iterrows():
@@ -260,38 +351,29 @@ def create_volcano_plot(df: pd.DataFrame, log2fc_col: str, pval_col: str,
     
     n_up = (sub['regulation'] == 'Up-regulated').sum()
     n_down = (sub['regulation'] == 'Down-regulated').sum()
-    ax.set_title(f"{title}\n(Up: {n_up}, Down: {n_down})", fontsize=13, fontweight='bold')
-    ax.set_xlabel(f"Log2 Fold Change ({log2fc_col})", fontsize=11)
-    ax.set_ylabel(f"-Log10 P-value ({pval_col})", fontsize=11)
+    final_title = f"{title or 'Volcano Plot'}\n(Up: {n_up}, Down: {n_down})"
+    
+    apply_plot_customizations(ax, fig, title=final_title,
+                              xlabel=xlabel or f"Log2 Fold Change ({log2fc_col})",
+                              ylabel=ylabel or f"-Log10 P-value ({pval_col})",
+                              title_fontsize=title_fontsize, label_fontsize=label_fontsize,
+                              xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
+                              tick_rotation=tick_rotation, show_grid=show_grid,
+                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
     ax.legend(title="", frameon=True, loc='upper right')
-    sns.despine(ax=ax)
-    fig.tight_layout()
     
-    code = f"""import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-sub = df.dropna(subset=['{log2fc_col}', '{pval_col}']).copy()
-sub['neg_log10_p'] = -np.log10(sub['{pval_col}'].replace(0, 1e-300))
-sub['regulation'] = np.select([
-    (sub['{log2fc_col}'] >= {fc_threshold}) & (sub['{pval_col}'] < {pval_threshold}),
-    (sub['{log2fc_col}'] <= -{fc_threshold}) & (sub['{pval_col}'] < {pval_threshold})
-], ['Up-regulated', 'Down-regulated'], default='Not Significant')
-
-plt.figure(figsize={figsize}, dpi={dpi})
-sns.scatterplot(data=sub, x='{log2fc_col}', y='neg_log10_p', hue='regulation',
-                palette={{'Up-regulated': '#E64B35', 'Down-regulated': '#3C5488', 'Not Significant': '#BCBDC0'}},
-                alpha=0.8, s=35)
-plt.axhline(-np.log10({pval_threshold}), color='gray', linestyle='--')
-plt.axvline({fc_threshold}, color='gray', linestyle='--')
-plt.axvline(-{fc_threshold}, color='gray', linestyle='--')
-plt.title('{title}', fontsize=14, fontweight='bold')
-plt.xlabel('Log2 Fold Change')
-plt.ylabel('-Log10 P-value')
-plt.tight_layout()
-plt.show()"""
-    
-    return fig, code
+    code_lines = [
+        "import numpy as np",
+        "import matplotlib.pyplot as plt",
+        "import seaborn as sns",
+        f"plt.figure(figsize={figsize}, dpi={dpi})"
+    ]
+    code_lines.extend(generate_customization_code_lines(
+        final_title, xlabel or f"Log2 Fold Change ({log2fc_col})", ylabel or f"-Log10 P-value ({pval_col})",
+        title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
+        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+    ))
+    return fig, "\n".join(code_lines)
 
 # ==============================================================================
 # 4. Correlation Heatmap
@@ -302,7 +384,11 @@ def create_correlation_heatmap(df: pd.DataFrame, columns: List[str],
                                figsize: Tuple[float, float] = (8.0, 7.0),
                                dpi: int = 300,
                                annot: bool = True,
-                               title: str = "Correlation Heatmap") -> Tuple[plt.Figure, str]:
+                               title: str = "Correlation Heatmap",
+                               title_fontsize: int = 14,
+                               xtick_fontsize: int = 10,
+                               ytick_fontsize: int = 10,
+                               tick_rotation: int = 45) -> Tuple[plt.Figure, str]:
     """Generate correlation matrix heatmap with annotated coefficients."""
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
@@ -313,7 +399,9 @@ def create_correlation_heatmap(df: pd.DataFrame, columns: List[str],
     sns.heatmap(corr, annot=annot, fmt=".2f", cmap=cmap, vmin=-1, vmax=1,
                 center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.8}, ax=ax)
     
-    ax.set_title(f"{title} ({method.capitalize()})", fontsize=13, fontweight='bold', pad=12)
+    ax.set_title(f"{title} ({method.capitalize()})", fontsize=title_fontsize, fontweight='bold', pad=12)
+    ax.tick_params(axis='x', rotation=tick_rotation, labelsize=xtick_fontsize)
+    ax.tick_params(axis='y', labelsize=ytick_fontsize)
     fig.tight_layout()
     
     code = f"""import matplotlib.pyplot as plt
@@ -323,7 +411,9 @@ cols = {repr(columns)}
 corr = df[cols].corr(method='{method}')
 plt.figure(figsize={figsize}, dpi={dpi})
 sns.heatmap(corr, annot={annot}, fmt='.2f', cmap='{cmap}', vmin=-1, vmax=1, center=0, square=True, linewidths=0.5)
-plt.title('{title} ({method.capitalize()})', fontsize=14, fontweight='bold')
+plt.title('{title} ({method.capitalize()})', fontsize={title_fontsize}, fontweight='bold')
+plt.tick_params(axis='x', rotation={tick_rotation}, labelsize={xtick_fontsize})
+plt.tick_params(axis='y', labelsize={ytick_fontsize})
 plt.tight_layout()
 plt.show()"""
     return fig, code
@@ -336,8 +426,20 @@ def create_scatter_regression_plot(df: pd.DataFrame, x_col: str, y_col: str,
                                    palette_name: str = "Nature (NPG)",
                                    figsize: Tuple[float, float] = (8.0, 6.0),
                                    dpi: int = 300,
-                                   show_ci: bool = True,
-                                   title: str = "") -> Tuple[plt.Figure, str]:
+                                   title: str = "",
+                                   xlabel: str = "",
+                                   ylabel: str = "",
+                                   title_fontsize: int = 14,
+                                   label_fontsize: int = 12,
+                                   xtick_fontsize: int = 10,
+                                   ytick_fontsize: int = 10,
+                                   tick_rotation: int = 0,
+                                   show_grid: bool = True,
+                                   xlim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                                   ylim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                                   xscale: str = 'linear',
+                                   yscale: str = 'linear',
+                                   show_ci: bool = True) -> Tuple[plt.Figure, str]:
     """Generate scatter plot with OLS linear regression fit and confidence interval."""
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
@@ -346,7 +448,6 @@ def create_scatter_regression_plot(df: pd.DataFrame, x_col: str, y_col: str,
     
     if hue_col:
         sns.scatterplot(data=sub, x=x_col, y=y_col, hue=hue_col, palette=colors, ax=ax, alpha=0.7, s=40)
-        # fit overall regression line
         sns.regplot(data=sub, x=x_col, y=y_col, scatter=False, ax=ax, color='#333333', ci=95 if show_ci else None,
                     line_kws={'linewidth': 1.8, 'linestyle': '--'})
     else:
@@ -354,17 +455,24 @@ def create_scatter_regression_plot(df: pd.DataFrame, x_col: str, y_col: str,
                     scatter_kws={'alpha': 0.7, 's': 40}, line_kws={'linewidth': 2.0})
         
     apply_plot_customizations(ax, fig, title=title or f"{y_col} vs {x_col}",
-                              xlabel=x_col, ylabel=y_col)
+                              xlabel=xlabel or x_col, ylabel=ylabel or y_col,
+                              title_fontsize=title_fontsize, label_fontsize=label_fontsize,
+                              xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
+                              tick_rotation=tick_rotation, show_grid=show_grid,
+                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
     
-    code = f"""import matplotlib.pyplot as plt
-import seaborn as sns
-
-plt.figure(figsize={figsize}, dpi={dpi})
-sns.regplot(data=df, x='{x_col}', y='{y_col}', ci={95 if show_ci else 'None'})
-plt.title('{title or f"{y_col} vs {x_col}"}', fontsize=14, fontweight='bold')
-plt.tight_layout()
-plt.show()"""
-    return fig, code
+    code_lines = [
+        "import matplotlib.pyplot as plt",
+        "import seaborn as sns",
+        f"plt.figure(figsize={figsize}, dpi={dpi})",
+        f"sns.regplot(data=df, x='{x_col}', y='{y_col}', ci={95 if show_ci else 'None'})"
+    ]
+    code_lines.extend(generate_customization_code_lines(
+        title or f"{y_col} vs {x_col}", xlabel or x_col, ylabel or y_col,
+        title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
+        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+    ))
+    return fig, "\n".join(code_lines)
 
 # ==============================================================================
 # 6. Bar Plot with Error Bars (Mean ± SEM / SD)
@@ -375,7 +483,19 @@ def create_bar_error_plot(df: pd.DataFrame, x_col: str, y_col: str,
                           palette_name: str = "Nature (NPG)",
                           figsize: Tuple[float, float] = (8.0, 6.0),
                           dpi: int = 300,
-                          title: str = "") -> Tuple[plt.Figure, str]:
+                          title: str = "",
+                          xlabel: str = "",
+                          ylabel: str = "",
+                          title_fontsize: int = 14,
+                          label_fontsize: int = 12,
+                          xtick_fontsize: int = 10,
+                          ytick_fontsize: int = 10,
+                          tick_rotation: int = 0,
+                          show_grid: bool = True,
+                          xlim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                          ylim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                          xscale: str = 'linear',
+                          yscale: str = 'linear') -> Tuple[plt.Figure, str]:
     """Generate scientific bar chart with error bars (Standard Error or SD)."""
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
@@ -386,17 +506,24 @@ def create_bar_error_plot(df: pd.DataFrame, x_col: str, y_col: str,
     
     eb_label = "Mean ± SEM" if errorbar == "se" else "Mean ± SD"
     apply_plot_customizations(ax, fig, title=title or f"{y_col} by {x_col} ({eb_label})",
-                              xlabel=x_col, ylabel=f"{y_col} ({eb_label})")
+                              xlabel=xlabel or x_col, ylabel=ylabel or f"{y_col} ({eb_label})",
+                              title_fontsize=title_fontsize, label_fontsize=label_fontsize,
+                              xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
+                              tick_rotation=tick_rotation, show_grid=show_grid,
+                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
     
-    code = f"""import matplotlib.pyplot as plt
-import seaborn as sns
-
-plt.figure(figsize={figsize}, dpi={dpi})
-sns.barplot(data=df, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, errorbar='{errorbar}', capsize=0.15)
-plt.title('{title or f"{y_col} by {x_col}"}', fontsize=14, fontweight='bold')
-plt.tight_layout()
-plt.show()"""
-    return fig, code
+    code_lines = [
+        "import matplotlib.pyplot as plt",
+        "import seaborn as sns",
+        f"plt.figure(figsize={figsize}, dpi={dpi})",
+        f"sns.barplot(data=df, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, errorbar='{errorbar}', capsize=0.15)"
+    ]
+    code_lines.extend(generate_customization_code_lines(
+        title or f"{y_col} by {x_col}", xlabel or x_col, ylabel or f"{y_col} ({eb_label})",
+        title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
+        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+    ))
+    return fig, "\n".join(code_lines)
 
 # ==============================================================================
 # 7. Distribution / Histogram & KDE
@@ -408,7 +535,19 @@ def create_distribution_plot(df: pd.DataFrame, col: str,
                              palette_name: str = "Nature (NPG)",
                              figsize: Tuple[float, float] = (8.0, 5.5),
                              dpi: int = 300,
-                             title: str = "") -> Tuple[plt.Figure, str]:
+                             title: str = "",
+                             xlabel: str = "",
+                             ylabel: str = "",
+                             title_fontsize: int = 14,
+                             label_fontsize: int = 12,
+                             xtick_fontsize: int = 10,
+                             ytick_fontsize: int = 10,
+                             tick_rotation: int = 0,
+                             show_grid: bool = True,
+                             xlim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                             ylim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                             xscale: str = 'linear',
+                             yscale: str = 'linear') -> Tuple[plt.Figure, str]:
     """Generate distribution histogram and Kernel Density Estimation."""
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
@@ -418,17 +557,24 @@ def create_distribution_plot(df: pd.DataFrame, col: str,
                  palette=colors, ax=ax, alpha=0.6, stat="density", common_norm=False)
     
     apply_plot_customizations(ax, fig, title=title or f"Distribution of {col}",
-                              xlabel=col, ylabel="Density")
+                              xlabel=xlabel or col, ylabel=ylabel or "Density",
+                              title_fontsize=title_fontsize, label_fontsize=label_fontsize,
+                              xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
+                              tick_rotation=tick_rotation, show_grid=show_grid,
+                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
     
-    code = f"""import matplotlib.pyplot as plt
-import seaborn as sns
-
-plt.figure(figsize={figsize}, dpi={dpi})
-sns.histplot(data=df, x='{col}', hue={repr(hue_col)}, bins={bins}, kde={show_kde}, stat='density', common_norm=False)
-plt.title('{title or f"Distribution of {col}"}', fontsize=14, fontweight='bold')
-plt.tight_layout()
-plt.show()"""
-    return fig, code
+    code_lines = [
+        "import matplotlib.pyplot as plt",
+        "import seaborn as sns",
+        f"plt.figure(figsize={figsize}, dpi={dpi})",
+        f"sns.histplot(data=df, x='{col}', hue={repr(hue_col)}, bins={bins}, kde={show_kde}, stat='density', common_norm=False)"
+    ]
+    code_lines.extend(generate_customization_code_lines(
+        title or f"Distribution of {col}", xlabel or col, ylabel or "Density",
+        title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
+        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+    ))
+    return fig, "\n".join(code_lines)
 
 # ==============================================================================
 # 8. PCA Biplot (Unsupervised Clustering)
@@ -438,17 +584,27 @@ def create_pca_plot(df: pd.DataFrame, feature_cols: List[str],
                     palette_name: str = "Nature (NPG)",
                     figsize: Tuple[float, float] = (8.0, 6.0),
                     dpi: int = 300,
-                    title: str = "PCA Projection") -> Tuple[plt.Figure, str]:
+                    title: str = "PCA Projection",
+                    xlabel: str = "",
+                    ylabel: str = "",
+                    title_fontsize: int = 14,
+                    label_fontsize: int = 12,
+                    xtick_fontsize: int = 10,
+                    ytick_fontsize: int = 10,
+                    tick_rotation: int = 0,
+                    show_grid: bool = True,
+                    xlim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                    ylim: Optional[Tuple[Optional[float], Optional[float]]] = None,
+                    xscale: str = 'linear',
+                    yscale: str = 'linear') -> Tuple[plt.Figure, str]:
     """Perform PCA and generate 2D score plot with explained variance ratios."""
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     
-    # Standardize data
     sub = df[feature_cols + ([label_col] if label_col else [])].dropna()
     X = sub[feature_cols].values
     X_std = (X - np.mean(X, axis=0)) / (np.std(X, axis=0) + 1e-9)
     
-    # SVD for PCA
     U, S, Vt = np.linalg.svd(X_std, full_matrices=False)
     PCs = np.dot(X_std, Vt.T[:, :2])
     explained_variance = (S**2) / (len(X_std) - 1)
@@ -462,28 +618,23 @@ def create_pca_plot(df: pd.DataFrame, feature_cols: List[str],
     sns.scatterplot(data=sub, x='PC1', y='PC2', hue=label_col, palette=colors if label_col else None,
                     s=50, alpha=0.8, ax=ax)
     
-    ax.set_xlabel(f"PC1 ({ratios[0]:.1f}% variance)", fontsize=12)
-    ax.set_ylabel(f"PC2 ({ratios[1]:.1f}% variance)", fontsize=12)
-    ax.set_title(title, fontsize=13, fontweight='bold')
-    ax.grid(True, linestyle='--', alpha=0.4)
-    sns.despine(ax=ax)
-    fig.tight_layout()
+    apply_plot_customizations(ax, fig, title=title,
+                              xlabel=xlabel or f"PC1 ({ratios[0]:.1f}% variance)",
+                              ylabel=ylabel or f"PC2 ({ratios[1]:.1f}% variance)",
+                              title_fontsize=title_fontsize, label_fontsize=label_fontsize,
+                              xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
+                              tick_rotation=tick_rotation, show_grid=show_grid,
+                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
     
-    code = f"""import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-sub = df[{repr(feature_cols)}].dropna()
-X = sub.values
-X_std = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
-U, S, Vt = np.linalg.svd(X_std, full_matrices=False)
-PCs = np.dot(X_std, Vt.T[:, :2])
-sub['PC1'] = PCs[:, 0]
-sub['PC2'] = PCs[:, 1]
-
-plt.figure(figsize={figsize}, dpi={dpi})
-sns.scatterplot(data=sub, x='PC1', y='PC2', hue={repr(label_col)}, s=50, alpha=0.8)
-plt.title('{title}', fontsize=14, fontweight='bold')
-plt.tight_layout()
-plt.show()"""
-    return fig, code
+    code_lines = [
+        "import numpy as np",
+        "import matplotlib.pyplot as plt",
+        "import seaborn as sns",
+        f"plt.figure(figsize={figsize}, dpi={dpi})"
+    ]
+    code_lines.extend(generate_customization_code_lines(
+        title, xlabel or f"PC1 ({ratios[0]:.1f}% variance)", ylabel or f"PC2 ({ratios[1]:.1f}% variance)",
+        title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
+        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+    ))
+    return fig, "\n".join(code_lines)
