@@ -568,15 +568,18 @@ with tab_plots:
         st.markdown("#### 2. 變項配置")
         if "Box / Violin" in plot_type:
             pt_mode = st.radio("繪製子型態", ["Boxplot + Jitter", "Violin Plot", "Strip Plot Only"], horizontal=True)
-            px = st.selectbox("X 軸 (分組類別)", categorical_cols if categorical_cols else all_cols)
-            py = st.selectbox("Y 軸 (分析數值)", numeric_cols)
+            default_cat_idx = all_cols.index(categorical_cols[0]) if categorical_cols else 0
+            px = st.selectbox("X 軸 (類別 / 文字欄位)", all_cols, index=default_cat_idx)
+            py = st.selectbox("Y 軸 (分析數值)", numeric_cols if numeric_cols else all_cols)
             phue = st.selectbox("次分組 (Hue, 選填)", [None] + categorical_cols)
+            is_current_x_numeric = pd.api.types.is_numeric_dtype(df[px])
         elif "Survival Curve" in plot_type:
             ptime = st.selectbox("時間變項 (Time)", numeric_cols, key="plot_surv_time")
             pevt = st.selectbox("事件變項 (Event: 1=發生, 0=設限)", numeric_cols if numeric_cols else all_cols, key="plot_surv_evt")
             pgrp = st.selectbox("分組變項 (選填)", [None] + categorical_cols, key="plot_surv_grp")
             pci = st.checkbox("顯示 95% 信賴區間", value=True)
             pmed = st.checkbox("標註中位存活時間虛線", value=True)
+            is_current_x_numeric = True
         elif "Volcano Plot" in plot_type:
             pfc = st.selectbox("Log2 Fold Change 欄位", numeric_cols, index=0)
             ppval = st.selectbox("P-value 欄位", [c for c in numeric_cols if c != pfc], index=0)
@@ -584,42 +587,55 @@ with tab_plots:
             pgene = st.selectbox("基因/特徵標籤欄位 (選填)", [None] + gene_candidates)
             fc_th = st.number_input("Log2 FC 顯著閾值", value=1.0, step=0.1)
             pval_th = st.number_input("P-value 顯著閾值", value=0.05, step=0.01)
+            is_current_x_numeric = True
         elif "Correlation Heatmap" in plot_type:
             p_corr_cols = st.multiselect("選取熱圖欄位 (≥2)", numeric_cols, default=numeric_cols[:min(7, len(numeric_cols))])
             p_corr_m = st.selectbox("相關方法", ["pearson", "spearman"])
             p_annot = st.checkbox("標註相關係數數值", value=True)
+            is_current_x_numeric = False
         elif "Scatter + OLS Fit" in plot_type:
-            ps_x = st.selectbox("X 軸數值欄位", numeric_cols, index=0)
+            ps_x = st.selectbox("X 軸欄位 (數值或類別文字)", all_cols, index=0)
             ps_y = st.selectbox("Y 軸數值欄位", [c for c in numeric_cols if c != ps_x], index=0)
             ps_hue = st.selectbox("顏色分類 (Hue, 選填)", [None] + categorical_cols)
             ps_ci = st.checkbox("顯示 95% 迴歸信賴區間", value=True)
+            is_current_x_numeric = pd.api.types.is_numeric_dtype(df[ps_x])
         elif "Bar + SEM/SD" in plot_type:
-            pb_x = st.selectbox("X 軸 (類別)", categorical_cols if categorical_cols else all_cols)
-            pb_y = st.selectbox("Y 軸 (數值)", numeric_cols)
+            default_cat_idx = all_cols.index(categorical_cols[0]) if categorical_cols else 0
+            pb_x = st.selectbox("X 軸 (類別 / 文字欄位)", all_cols, index=default_cat_idx)
+            pb_y = st.selectbox("Y 軸 (數值)", numeric_cols if numeric_cols else all_cols)
             pb_hue = st.selectbox("次分組 (Hue, 選填)", [None] + categorical_cols)
             pb_err = st.radio("誤差條類型", ["se (標準誤 SEM)", "sd (標準差 SD)"])
+            is_current_x_numeric = pd.api.types.is_numeric_dtype(df[pb_x])
         elif "Histogram + KDE" in plot_type:
-            ph_col = st.selectbox("數值欄位", numeric_cols)
+            ph_col = st.selectbox("分析欄位 (數值型分佈 或 文字型計數)", all_cols)
             ph_hue = st.selectbox("分組疊加 (Hue, 選填)", [None] + categorical_cols)
             ph_bins = st.slider("組數 (Bins)", 10, 60, 25)
             ph_kde = st.checkbox("顯示核密度估計 (KDE 曲線)", value=True)
+            is_current_x_numeric = pd.api.types.is_numeric_dtype(df[ph_col])
         elif "PCA Biplot" in plot_type:
             pca_features = st.multiselect("選取 PCA 特徵欄位 (≥2)", numeric_cols, default=numeric_cols[:min(8, len(numeric_cols))])
             pca_label = st.selectbox("標籤著色欄位 (選填)", [None] + categorical_cols)
+            is_current_x_numeric = True
 
         st.markdown("#### 3. 🎨 視覺美學與座標軸客製化")
         
         with st.expander("📐 座標軸尺度與數值範圍 (X/Y Scale & Limits)", expanded=True):
             col_sc1, col_sc2 = st.columns(2)
             with col_sc1:
-                x_scale_opt = st.selectbox("X 軸尺度 (Scale)", ["linear (線性)", "log (對數 Log10)"])
-                x_scale_val = "log" if "log" in x_scale_opt else "linear"
-                x_custom_lim = st.checkbox("自訂 X 軸數值範圍", value=False)
-                x_min, x_max = None, None
-                if x_custom_lim:
-                    x_c1, x_c2 = st.columns(2)
-                    x_min = x_c1.number_input("X 軸最小值", value=0.0)
-                    x_max = x_c2.number_input("X 軸最大值", value=100.0)
+                if not is_current_x_numeric:
+                    st.info("🏷️ **X 軸文字模式**：當前 X 軸為文字標籤，系統已自動確保文字完整呈現。對數尺度與自訂範圍僅適用於連續數值軸。")
+                    x_scale_val = "linear"
+                    x_custom_lim = False
+                    x_min, x_max = None, None
+                else:
+                    x_scale_opt = st.selectbox("X 軸尺度 (Scale)", ["linear (線性)", "log (對數 Log10)"])
+                    x_scale_val = "log" if "log" in x_scale_opt else "linear"
+                    x_custom_lim = st.checkbox("自訂 X 軸數值範圍", value=False)
+                    x_min, x_max = None, None
+                    if x_custom_lim:
+                        x_c1, x_c2 = st.columns(2)
+                        x_min = x_c1.number_input("X 軸最小值", value=0.0)
+                        x_max = x_c2.number_input("X 軸最大值", value=100.0)
             with col_sc2:
                 y_scale_opt = st.selectbox("Y 軸尺度 (Scale)", ["linear (線性)", "log (對數 Log10)"])
                 y_scale_val = "log" if "log" in y_scale_opt else "linear"
@@ -641,7 +657,9 @@ with tab_plots:
             
             c_tk1, c_tk2 = st.columns(2)
             tick_fsize = c_tk1.slider("刻度文字大小 (Tick Font Size)", 6, 20, 10)
-            tick_rot = c_tk2.selectbox("X 軸刻度文字旋轉", [0, 30, 45, 90], index=0)
+            # Default rotation 30 if X is text to prevent overlap
+            default_rot_idx = 1 if not is_current_x_numeric else 0
+            tick_rot = c_tk2.selectbox("X 軸文字旋轉角度", [0, 30, 45, 90], index=default_rot_idx, help="若文字標籤較長，推薦選取 30° 或 45° 避免重疊")
             show_grid_opt = st.checkbox("顯示網格輔助線 (Grid)", value=True)
 
         with st.expander("📏 畫布尺寸與頂級期刊配色", expanded=False):

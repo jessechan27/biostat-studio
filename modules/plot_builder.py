@@ -35,9 +35,13 @@ def get_color_list(palette_name: str, n_colors: int = 8) -> List[str]:
         return sns.color_palette(pal, n_colors).as_hex()
 
 def setup_matplotlib_style(theme: str = "whitegrid", font_scale: float = 1.0, font_family: str = "sans-serif"):
-    """Configure matplotlib/seaborn aesthetic style."""
+    """Configure matplotlib/seaborn aesthetic style with multi-language and CJK font support."""
     sns.set_theme(style=theme, font=font_family, font_scale=font_scale)
-    plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Helvetica', 'Microsoft JhengHei', 'SimHei', 'sans-serif']
+    # Ensure Chinese and Unicode text glyphs display properly without tofu boxes
+    plt.rcParams['font.sans-serif'] = [
+        'Microsoft JhengHei', 'Microsoft YaHei', 'PingFang TC', 'SimHei',
+        'Arial Unicode MS', 'DejaVu Sans', 'Arial', 'sans-serif'
+    ]
     plt.rcParams['axes.unicode_minus'] = False
 
 def apply_plot_customizations(ax, fig, title: str = "", xlabel: str = "", ylabel: str = "",
@@ -47,8 +51,9 @@ def apply_plot_customizations(ax, fig, title: str = "", xlabel: str = "", ylabel
                                despine: bool = True,
                                xlim: Optional[Tuple[Optional[float], Optional[float]]] = None,
                                ylim: Optional[Tuple[Optional[float], Optional[float]]] = None,
-                               xscale: str = 'linear', yscale: str = 'linear'):
-    """Apply comprehensive title, label, scale limits, tick sizes, and axis scaling customizations."""
+                               xscale: str = 'linear', yscale: str = 'linear',
+                               is_x_categorical: bool = False):
+    """Apply comprehensive title, label, scale limits, tick sizes, and axis scaling customizations with text x-axis support."""
     if title:
         ax.set_title(title, fontsize=title_fontsize, pad=12, fontweight='bold')
     if xlabel:
@@ -56,20 +61,26 @@ def apply_plot_customizations(ax, fig, title: str = "", xlabel: str = "", ylabel
     if ylabel:
         ax.set_ylabel(ylabel, fontsize=label_fontsize, labelpad=8)
     
-    # Scale adjustment
-    if xscale in ['linear', 'log']:
+    # Scale adjustment: Never apply log scale to categorical text axis
+    if not is_x_categorical and xscale == 'log':
         try:
-            ax.set_xscale(xscale)
+            ax.set_xscale('log')
         except Exception:
             pass
+    elif xscale == 'linear':
+        try:
+            ax.set_xscale('linear')
+        except Exception:
+            pass
+
     if yscale in ['linear', 'log']:
         try:
             ax.set_yscale(yscale)
         except Exception:
             pass
 
-    # Axis Limits
-    if xlim is not None:
+    # Axis Limits: Only apply xlim if X is continuous numeric
+    if not is_x_categorical and xlim is not None:
         xmin, xmax = xlim
         if xmin is not None and xmax is not None and xmin < xmax:
             ax.set_xlim(xmin, xmax)
@@ -87,14 +98,26 @@ def apply_plot_customizations(ax, fig, title: str = "", xlabel: str = "", ylabel
         elif ymax is not None:
             ax.set_ylim(top=ymax)
 
-    # Tick formatting & font sizes
-    ax.tick_params(axis='x', rotation=tick_rotation, labelsize=xtick_fontsize)
-    ax.tick_params(axis='y', labelsize=ytick_fontsize)
+    # Tick formatting & font sizes for text X-axis
+    if tick_rotation != 0:
+        plt.setp(ax.get_xticklabels(), rotation=tick_rotation,
+                 ha='right' if tick_rotation > 0 else 'center',
+                 rotation_mode='anchor',
+                 fontsize=xtick_fontsize, visible=True)
+    else:
+        plt.setp(ax.get_xticklabels(), rotation=0, ha='center',
+                 fontsize=xtick_fontsize, visible=True)
+
+    plt.setp(ax.get_yticklabels(), fontsize=ytick_fontsize, visible=True)
     
     ax.grid(show_grid, linestyle='--', alpha=0.5)
     if despine:
         sns.despine(ax=ax, top=True, right=True)
-    fig.tight_layout()
+        
+    try:
+        fig.tight_layout()
+    except Exception:
+        pass
 
 def generate_customization_code_lines(title: str, xlabel: str, ylabel: str,
                                       title_fontsize: int, label_fontsize: int,
@@ -102,7 +125,8 @@ def generate_customization_code_lines(title: str, xlabel: str, ylabel: str,
                                       tick_rotation: int, show_grid: bool,
                                       xlim: Optional[Tuple[Optional[float], Optional[float]]],
                                       ylim: Optional[Tuple[Optional[float], Optional[float]]],
-                                      xscale: str, yscale: str) -> List[str]:
+                                      xscale: str, yscale: str,
+                                      is_x_categorical: bool = False) -> List[str]:
     """Helper to generate Python snippet for reproducibility."""
     lines = []
     if title:
@@ -111,16 +135,19 @@ def generate_customization_code_lines(title: str, xlabel: str, ylabel: str,
         lines.append(f"plt.xlabel({repr(xlabel)}, fontsize={label_fontsize})")
     if ylabel:
         lines.append(f"plt.ylabel({repr(ylabel)}, fontsize={label_fontsize})")
-    if xscale == 'log':
+    if not is_x_categorical and xscale == 'log':
         lines.append("plt.xscale('log')")
     if yscale == 'log':
         lines.append("plt.yscale('log')")
-    if xlim and (xlim[0] is not None or xlim[1] is not None):
+    if not is_x_categorical and xlim and (xlim[0] is not None or xlim[1] is not None):
         lines.append(f"plt.xlim({xlim[0]}, {xlim[1]})")
     if ylim and (ylim[0] is not None or ylim[1] is not None):
         lines.append(f"plt.ylim({ylim[0]}, {ylim[1]})")
-    lines.append(f"plt.tick_params(axis='x', rotation={tick_rotation}, labelsize={xtick_fontsize})")
-    lines.append(f"plt.tick_params(axis='y', labelsize={ytick_fontsize})")
+    if tick_rotation != 0:
+        lines.append(f"plt.xticks(rotation={tick_rotation}, ha='right', fontsize={xtick_fontsize})")
+    else:
+        lines.append(f"plt.xticks(rotation=0, ha='center', fontsize={xtick_fontsize})")
+    lines.append(f"plt.yticks(fontsize={ytick_fontsize})")
     lines.append(f"plt.grid({show_grid}, linestyle='--', alpha=0.5)")
     lines.append("plt.tight_layout()")
     lines.append("plt.show()")
@@ -134,7 +161,7 @@ def fig_to_bytes(fig, format: str = 'png', dpi: int = 300) -> bytes:
     return buf.getvalue()
 
 # ==============================================================================
-# 1. Boxplot / Violin + Jitter Plot (Group Comparison)
+# 1. Boxplot / Violin + Jitter Plot (Group Comparison with Text X-axis)
 # ==============================================================================
 def create_group_distribution_plot(df: pd.DataFrame, x_col: str, y_col: str,
                                    hue_col: Optional[str] = None,
@@ -159,19 +186,22 @@ def create_group_distribution_plot(df: pd.DataFrame, x_col: str, y_col: str,
                                    jitter_alpha: float = 0.6,
                                    jitter_size: float = 5.0,
                                    show_points: bool = True) -> Tuple[plt.Figure, str]:
-    """Generate Boxplot, Violin, or Strip plot with group comparisons."""
+    """Generate Boxplot, Violin, or Strip plot with text X-axis group comparisons."""
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     
     colors = get_color_list(palette_name)
-    sub_df = df.dropna(subset=[x_col, y_col] + ([hue_col] if hue_col else []))
+    sub_df = df.dropna(subset=[x_col, y_col] + ([hue_col] if hue_col else [])).copy()
+    # Explicitly ensure X is treated as string text
+    sub_df[x_col] = sub_df[x_col].astype(str)
     
     code_lines = [
         "import matplotlib.pyplot as plt",
         "import seaborn as sns",
         "",
         f"plt.figure(figsize={figsize}, dpi={dpi})",
-        f"sub_df = df.dropna(subset=['{x_col}', '{y_col}'])"
+        f"sub_df = df.dropna(subset=['{x_col}', '{y_col}']).copy()",
+        f"sub_df['{x_col}'] = sub_df['{x_col}'].astype(str)"
     ]
 
     if "Boxplot" in plot_type:
@@ -197,12 +227,13 @@ def create_group_distribution_plot(df: pd.DataFrame, x_col: str, y_col: str,
                               title_fontsize=title_fontsize, label_fontsize=label_fontsize,
                               xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
                               tick_rotation=tick_rotation, show_grid=show_grid,
-                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
+                              xlim=None, ylim=ylim, xscale='linear', yscale=yscale,
+                              is_x_categorical=True)
     
     code_lines.extend(generate_customization_code_lines(
         title or f"{y_col} across {x_col}", xlabel or x_col, ylabel or y_col,
         title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
-        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+        tick_rotation, show_grid, None, ylim, 'linear', yscale, is_x_categorical=True
     ))
     return fig, "\n".join(code_lines)
 
@@ -272,7 +303,8 @@ def create_survival_plot(df: pd.DataFrame, time_col: str, event_col: str,
                               xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
                               tick_rotation=tick_rotation, show_grid=show_grid,
                               xlim=xlim, ylim=ylim if ylim else (-0.02, 1.05),
-                              xscale=xscale, yscale=yscale)
+                              xscale=xscale, yscale=yscale,
+                              is_x_categorical=False)
     
     code_lines = [
         "import matplotlib.pyplot as plt",
@@ -285,7 +317,7 @@ def create_survival_plot(df: pd.DataFrame, time_col: str, event_col: str,
     code_lines.extend(generate_customization_code_lines(
         final_title, xlabel or f"Time ({time_col})", ylabel or "Cumulative Survival Probability",
         title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
-        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+        tick_rotation, show_grid, xlim, ylim, xscale, yscale, is_x_categorical=False
     ))
     return fig, "\n".join(code_lines)
 
@@ -359,7 +391,8 @@ def create_volcano_plot(df: pd.DataFrame, log2fc_col: str, pval_col: str,
                               title_fontsize=title_fontsize, label_fontsize=label_fontsize,
                               xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
                               tick_rotation=tick_rotation, show_grid=show_grid,
-                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
+                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale,
+                              is_x_categorical=False)
     ax.legend(title="", frameon=True, loc='upper right')
     
     code_lines = [
@@ -371,7 +404,7 @@ def create_volcano_plot(df: pd.DataFrame, log2fc_col: str, pval_col: str,
     code_lines.extend(generate_customization_code_lines(
         final_title, xlabel or f"Log2 Fold Change ({log2fc_col})", ylabel or f"-Log10 P-value ({pval_col})",
         title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
-        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+        tick_rotation, show_grid, xlim, ylim, xscale, yscale, is_x_categorical=False
     ))
     return fig, "\n".join(code_lines)
 
@@ -389,7 +422,7 @@ def create_correlation_heatmap(df: pd.DataFrame, columns: List[str],
                                xtick_fontsize: int = 10,
                                ytick_fontsize: int = 10,
                                tick_rotation: int = 45) -> Tuple[plt.Figure, str]:
-    """Generate correlation matrix heatmap with annotated coefficients."""
+    """Generate correlation matrix heatmap with annotated coefficients and text labels."""
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     
@@ -400,8 +433,8 @@ def create_correlation_heatmap(df: pd.DataFrame, columns: List[str],
                 center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.8}, ax=ax)
     
     ax.set_title(f"{title} ({method.capitalize()})", fontsize=title_fontsize, fontweight='bold', pad=12)
-    ax.tick_params(axis='x', rotation=tick_rotation, labelsize=xtick_fontsize)
-    ax.tick_params(axis='y', labelsize=ytick_fontsize)
+    plt.setp(ax.get_xticklabels(), rotation=tick_rotation, ha='right', rotation_mode='anchor', fontsize=xtick_fontsize)
+    plt.setp(ax.get_yticklabels(), rotation=0, fontsize=ytick_fontsize)
     fig.tight_layout()
     
     code = f"""import matplotlib.pyplot as plt
@@ -412,14 +445,14 @@ corr = df[cols].corr(method='{method}')
 plt.figure(figsize={figsize}, dpi={dpi})
 sns.heatmap(corr, annot={annot}, fmt='.2f', cmap='{cmap}', vmin=-1, vmax=1, center=0, square=True, linewidths=0.5)
 plt.title('{title} ({method.capitalize()})', fontsize={title_fontsize}, fontweight='bold')
-plt.tick_params(axis='x', rotation={tick_rotation}, labelsize={xtick_fontsize})
-plt.tick_params(axis='y', labelsize={ytick_fontsize})
+plt.xticks(rotation={tick_rotation}, ha='right', fontsize={xtick_fontsize})
+plt.yticks(fontsize={ytick_fontsize})
 plt.tight_layout()
 plt.show()"""
     return fig, code
 
 # ==============================================================================
-# 5. Scatter Plot with Regression and Confidence Intervals
+# 5. Scatter Plot with Regression (or Categorical Strip Plot if X is Text)
 # ==============================================================================
 def create_scatter_regression_plot(df: pd.DataFrame, x_col: str, y_col: str,
                                    hue_col: Optional[str] = None,
@@ -440,42 +473,57 @@ def create_scatter_regression_plot(df: pd.DataFrame, x_col: str, y_col: str,
                                    xscale: str = 'linear',
                                    yscale: str = 'linear',
                                    show_ci: bool = True) -> Tuple[plt.Figure, str]:
-    """Generate scatter plot with OLS linear regression fit and confidence interval."""
+    """Generate scatter plot with OLS linear regression fit, or categorical scatter if X is text."""
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     colors = get_color_list(palette_name)
-    sub = df.dropna(subset=[x_col, y_col] + ([hue_col] if hue_col else []))
+    sub = df.dropna(subset=[x_col, y_col] + ([hue_col] if hue_col else [])).copy()
     
-    if hue_col:
-        sns.scatterplot(data=sub, x=x_col, y=y_col, hue=hue_col, palette=colors, ax=ax, alpha=0.7, s=40)
-        sns.regplot(data=sub, x=x_col, y=y_col, scatter=False, ax=ax, color='#333333', ci=95 if show_ci else None,
-                    line_kws={'linewidth': 1.8, 'linestyle': '--'})
+    is_x_numeric = pd.api.types.is_numeric_dtype(sub[x_col])
+    
+    code_lines = [
+        "import matplotlib.pyplot as plt",
+        "import seaborn as sns",
+        f"plt.figure(figsize={figsize}, dpi={dpi})"
+    ]
+
+    if is_x_numeric:
+        if hue_col:
+            sns.scatterplot(data=sub, x=x_col, y=y_col, hue=hue_col, palette=colors, ax=ax, alpha=0.7, s=40)
+            sns.regplot(data=sub, x=x_col, y=y_col, scatter=False, ax=ax, color='#333333', ci=95 if show_ci else None,
+                        line_kws={'linewidth': 1.8, 'linestyle': '--'})
+        else:
+            sns.regplot(data=sub, x=x_col, y=y_col, ax=ax, color=colors[0], ci=95 if show_ci else None,
+                        scatter_kws={'alpha': 0.7, 's': 40}, line_kws={'linewidth': 2.0})
+        code_lines.append(f"sns.regplot(data=df, x='{x_col}', y='{y_col}', ci={95 if show_ci else 'None'})")
     else:
-        sns.regplot(data=sub, x=x_col, y=y_col, ax=ax, color=colors[0], ci=95 if show_ci else None,
-                    scatter_kws={'alpha': 0.7, 's': 40}, line_kws={'linewidth': 2.0})
+        # Categorical text on X axis
+        sub[x_col] = sub[x_col].astype(str)
+        sns.stripplot(data=sub, x=x_col, y=y_col, hue=hue_col, palette=colors, ax=ax, alpha=0.7, size=6, jitter=0.25)
+        # Add mean line per category
+        means = sub.groupby(x_col)[y_col].mean()
+        ax.scatter(range(len(means)), means.values, color='#E64B35', marker='D', s=50, zorder=5, label='Category Mean')
+        code_lines.append(f"sns.stripplot(data=sub, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, jitter=0.25)")
         
     apply_plot_customizations(ax, fig, title=title or f"{y_col} vs {x_col}",
                               xlabel=xlabel or x_col, ylabel=ylabel or y_col,
                               title_fontsize=title_fontsize, label_fontsize=label_fontsize,
                               xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
                               tick_rotation=tick_rotation, show_grid=show_grid,
-                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
+                              xlim=None if not is_x_numeric else xlim, ylim=ylim,
+                              xscale='linear' if not is_x_numeric else xscale, yscale=yscale,
+                              is_x_categorical=not is_x_numeric)
     
-    code_lines = [
-        "import matplotlib.pyplot as plt",
-        "import seaborn as sns",
-        f"plt.figure(figsize={figsize}, dpi={dpi})",
-        f"sns.regplot(data=df, x='{x_col}', y='{y_col}', ci={95 if show_ci else 'None'})"
-    ]
     code_lines.extend(generate_customization_code_lines(
         title or f"{y_col} vs {x_col}", xlabel or x_col, ylabel or y_col,
         title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
-        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+        tick_rotation, show_grid, None if not is_x_numeric else xlim, ylim,
+        'linear' if not is_x_numeric else xscale, yscale, is_x_categorical=not is_x_numeric
     ))
     return fig, "\n".join(code_lines)
 
 # ==============================================================================
-# 6. Bar Plot with Error Bars (Mean ± SEM / SD)
+# 6. Bar Plot with Error Bars (Mean ± SEM / SD with Text X-axis)
 # ==============================================================================
 def create_bar_error_plot(df: pd.DataFrame, x_col: str, y_col: str,
                           hue_col: Optional[str] = None,
@@ -496,12 +544,14 @@ def create_bar_error_plot(df: pd.DataFrame, x_col: str, y_col: str,
                           ylim: Optional[Tuple[Optional[float], Optional[float]]] = None,
                           xscale: str = 'linear',
                           yscale: str = 'linear') -> Tuple[plt.Figure, str]:
-    """Generate scientific bar chart with error bars (Standard Error or SD)."""
+    """Generate scientific bar chart with error bars and clear text labels on X-axis."""
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     colors = get_color_list(palette_name)
+    sub = df.dropna(subset=[x_col, y_col] + ([hue_col] if hue_col else [])).copy()
+    sub[x_col] = sub[x_col].astype(str)
     
-    sns.barplot(data=df, x=x_col, y=y_col, hue=hue_col, palette=colors,
+    sns.barplot(data=sub, x=x_col, y=y_col, hue=hue_col, palette=colors,
                 errorbar=errorbar, capsize=0.15, err_kws={'linewidth': 1.5}, ax=ax, alpha=0.9)
     
     eb_label = "Mean ± SEM" if errorbar == "se" else "Mean ± SD"
@@ -510,23 +560,25 @@ def create_bar_error_plot(df: pd.DataFrame, x_col: str, y_col: str,
                               title_fontsize=title_fontsize, label_fontsize=label_fontsize,
                               xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
                               tick_rotation=tick_rotation, show_grid=show_grid,
-                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
+                              xlim=None, ylim=ylim, xscale='linear', yscale=yscale,
+                              is_x_categorical=True)
     
     code_lines = [
         "import matplotlib.pyplot as plt",
         "import seaborn as sns",
         f"plt.figure(figsize={figsize}, dpi={dpi})",
-        f"sns.barplot(data=df, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, errorbar='{errorbar}', capsize=0.15)"
+        f"sub = df.copy(); sub['{x_col}'] = sub['{x_col}'].astype(str)",
+        f"sns.barplot(data=sub, x='{x_col}', y='{y_col}', hue={repr(hue_col)}, errorbar='{errorbar}', capsize=0.15)"
     ]
     code_lines.extend(generate_customization_code_lines(
         title or f"{y_col} by {x_col}", xlabel or x_col, ylabel or f"{y_col} ({eb_label})",
         title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
-        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+        tick_rotation, show_grid, None, ylim, 'linear', yscale, is_x_categorical=True
     ))
     return fig, "\n".join(code_lines)
 
 # ==============================================================================
-# 7. Distribution / Histogram & KDE
+# 7. Distribution / Histogram & KDE (Supports Text/Categorical or Numeric X-axis)
 # ==============================================================================
 def create_distribution_plot(df: pd.DataFrame, col: str,
                              hue_col: Optional[str] = None,
@@ -548,31 +600,52 @@ def create_distribution_plot(df: pd.DataFrame, col: str,
                              ylim: Optional[Tuple[Optional[float], Optional[float]]] = None,
                              xscale: str = 'linear',
                              yscale: str = 'linear') -> Tuple[plt.Figure, str]:
-    """Generate distribution histogram and Kernel Density Estimation."""
+    """Generate distribution histogram for numeric data, or frequency bar plot for text/categorical data."""
     setup_matplotlib_style()
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     colors = get_color_list(palette_name)
+    sub = df.dropna(subset=[col] + ([hue_col] if hue_col else [])).copy()
     
-    sns.histplot(data=df, x=col, hue=hue_col, bins=bins, kde=show_kde,
-                 palette=colors, ax=ax, alpha=0.6, stat="density", common_norm=False)
-    
-    apply_plot_customizations(ax, fig, title=title or f"Distribution of {col}",
-                              xlabel=xlabel or col, ylabel=ylabel or "Density",
-                              title_fontsize=title_fontsize, label_fontsize=label_fontsize,
-                              xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
-                              tick_rotation=tick_rotation, show_grid=show_grid,
-                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
+    is_numeric = pd.api.types.is_numeric_dtype(sub[col])
     
     code_lines = [
         "import matplotlib.pyplot as plt",
         "import seaborn as sns",
-        f"plt.figure(figsize={figsize}, dpi={dpi})",
-        f"sns.histplot(data=df, x='{col}', hue={repr(hue_col)}, bins={bins}, kde={show_kde}, stat='density', common_norm=False)"
+        f"plt.figure(figsize={figsize}, dpi={dpi})"
     ]
+
+    if is_numeric:
+        sns.histplot(data=sub, x=col, hue=hue_col, bins=bins, kde=show_kde,
+                     palette=colors, ax=ax, alpha=0.6, stat="density", common_norm=False)
+        code_lines.append(f"sns.histplot(data=df, x='{col}', hue={repr(hue_col)}, bins={bins}, kde={show_kde}, stat='density')")
+    else:
+        # Category count plot showing text labels on X
+        sub[col] = sub[col].astype(str)
+        sns.countplot(data=sub, x=col, hue=hue_col, palette=colors, ax=ax, alpha=0.85)
+        # annotate counts
+        for p in ax.patches:
+            height = p.get_height()
+            if height > 0:
+                ax.annotate(f"{int(height)}", (p.get_x() + p.get_width() / 2., height),
+                            ha='center', va='bottom', fontsize=xtick_fontsize, xytext=(0, 3),
+                            textcoords='offset points')
+        code_lines.append(f"sub['{col}'] = sub['{col}'].astype(str)")
+        code_lines.append(f"sns.countplot(data=sub, x='{col}', hue={repr(hue_col)})")
+    
+    apply_plot_customizations(ax, fig, title=title or f"Distribution of {col}",
+                              xlabel=xlabel or col, ylabel=ylabel or ("Density" if is_numeric else "Count (頻次)"),
+                              title_fontsize=title_fontsize, label_fontsize=label_fontsize,
+                              xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
+                              tick_rotation=tick_rotation, show_grid=show_grid,
+                              xlim=None if not is_numeric else xlim, ylim=ylim,
+                              xscale='linear' if not is_numeric else xscale, yscale=yscale,
+                              is_x_categorical=not is_numeric)
+    
     code_lines.extend(generate_customization_code_lines(
-        title or f"Distribution of {col}", xlabel or col, ylabel or "Density",
+        title or f"Distribution of {col}", xlabel or col, ylabel or ("Density" if is_numeric else "Count"),
         title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
-        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+        tick_rotation, show_grid, None if not is_numeric else xlim, ylim,
+        'linear' if not is_numeric else xscale, yscale, is_x_categorical=not is_numeric
     ))
     return fig, "\n".join(code_lines)
 
@@ -624,7 +697,8 @@ def create_pca_plot(df: pd.DataFrame, feature_cols: List[str],
                               title_fontsize=title_fontsize, label_fontsize=label_fontsize,
                               xtick_fontsize=xtick_fontsize, ytick_fontsize=ytick_fontsize,
                               tick_rotation=tick_rotation, show_grid=show_grid,
-                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale)
+                              xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale,
+                              is_x_categorical=False)
     
     code_lines = [
         "import numpy as np",
@@ -635,6 +709,6 @@ def create_pca_plot(df: pd.DataFrame, feature_cols: List[str],
     code_lines.extend(generate_customization_code_lines(
         title, xlabel or f"PC1 ({ratios[0]:.1f}% variance)", ylabel or f"PC2 ({ratios[1]:.1f}% variance)",
         title_fontsize, label_fontsize, xtick_fontsize, ytick_fontsize,
-        tick_rotation, show_grid, xlim, ylim, xscale, yscale
+        tick_rotation, show_grid, xlim, ylim, xscale, yscale, is_x_categorical=False
     ))
     return fig, "\n".join(code_lines)
