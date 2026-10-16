@@ -7,21 +7,21 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from typing import Dict, Any, List, Optional, Tuple
 
-# Scientific and journal color palettes
+# Scientific, aerospace, and high-tech color palettes
 PALETTES = {
+    "SpaceX Starship (Cyber Cyan)": ["#00F0FF", "#FF0055", "#FFE600", "#7928CA", "#00DFD8", "#FF4B4B", "#2BD2FF", "#E2E8F0"],
+    "Tesla Cybertruck (Neon Red)": ["#E82127", "#00E5FF", "#FCEE0A", "#00FF66", "#FF007F", "#9D00FF", "#3B82F6", "#FFFFFF"],
     "Nature (NPG)": ["#E64B35", "#4DBBD5", "#00A087", "#3C5488", "#F39B7F", "#8491B4", "#91D1C2", "#DC0000", "#7E6148"],
     "Lancet": ["#00468B", "#ED0000", "#42B540", "#0099B4", "#925E9F", "#FDAF91", "#AD002A", "#ADB6B6"],
     "NEJM": ["#BC3C29", "#0072B5", "#E18727", "#20854E", "#7876B1", "#6F99AD", "#FFDC91", "#EE4C97"],
     "JAMA": ["#374E55", "#DF8F44", "#00A1D5", "#B24745", "#79AF97", "#6A6599", "#80796B"],
-    "Viridis": "viridis",
-    "Plasma": "plasma",
-    "Mako": "mako",
-    "Rocket": "rocket",
+    "Viridis (Quantum)": "viridis",
+    "Plasma (High-Energy)": "plasma",
+    "Mako (Deep Space)": "mako",
+    "Rocket (Falcon Thruster)": "rocket",
     "Set2 (Clean)": "Set2",
     "Dark2 (Contrasting)": "Dark2",
-    "Pastel1": "Pastel1",
-    "Spectral": "Spectral",
-    "Coolwarm": "coolwarm"
+    "Coolwarm (Thermal)": "coolwarm"
 }
 
 def get_color_list(palette_name: str, n_colors: int = 8) -> List[str]:

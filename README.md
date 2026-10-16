@@ -1,26 +1,27 @@
-# 🧬 BioStat Studio | 生醫統計分析與客製化繪圖平台
+# ⚡ Super Xstat // 頂尖黑科技生物統計分析與量子繪圖平台
 
-[![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Streamlit App](https://img.shields.io/badge/Framework-Streamlit-FF4B4B.svg)](https://streamlit.io/)
-[![Seaborn](https://img.shields.io/badge/Visualization-Seaborn%20%7C%20Matplotlib-388E3C.svg)](https://seaborn.pydata.org/)
+[![Python Version](https://img.shields.io/badge/Python-3.10%2B-00F0FF.svg)](https://www.python.org/)
+[![SpaceX Telemetry](https://img.shields.io/badge/Aesthetic-SpaceX%20%7C%20Tesla%20Dark-E82127.svg)](https://github.com/jessechan27/biostat-studio)
+[![Streamlit App](https://img.shields.io/badge/Engine-Streamlit%20Quantum-FF4B4B.svg)](https://streamlit.io/)
+[![Seaborn](https://img.shields.io/badge/Vector-Seaborn%20%7C%20Matplotlib-388E3C.svg)](https://seaborn.pydata.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **專為生物醫學研究人員、臨床醫師與生物資訊學家打造的統計決策引導、完整醫學報告與出版級繪圖工作站。**  
-> 支援一鍵上傳 Excel/CSV 檔案，提供「智慧統計方法推薦精靈」引導正確選擇統計檢定，自動生成符合國際期刊規範的結構化分析報告；圖表支援完整 X/Y 軸尺度（線性/對數/範圍限制）與全方位文字大小調整！
+> **Super Xstat 是專為生物醫學研究人員、臨床醫師與生物資訊科學家打造的航太黑科技級統計推論與量子級繪圖工作站。**  
+> 融合 Tesla Cybertruck 與 SpaceX 星艦 (Starship) 儀表座艙黑科技風，整合智慧統計方法決策精靈、APA/ICMJE 結構化醫學分析報告、支援 X/Y 軸尺度自由縮放與文字標籤完整呈現！
 
 ---
 
-## 🌟 核心特色功能 (Key Features)
+## 🌟 核心黑科技模組 (Core Architecture)
 
-### 1. 🎯 智慧統計方法推薦決策精靈 (Statistical Method Advisor)
-- **避免生醫統計誤用**：根據研究設計（獨立組別、前後測配對、多因子、二元疾病預後、存活時間追蹤）動態提供決策指引。
+### 1. 🎯 自動統計推論決策精靈 (Statistical Method Advisor)
+- **避免生醫統計誤用**：針對兩組獨立、前後測配對、雙因子、二元疾病預後、存活時間追蹤提供決策引導。
 - **前提假設嚴格把關**：
-  - **常態性檢定** (Shapiro-Wilk) ➔ 判定母數 vs 無母數檢定。
-  - **變異數齊一性** (Levene's test) ➔ 判定 Student's t vs Welch's t (自由度修正)。
-  - **列聯表期望頻次診斷** ➔ 期望頻次 < 5 時主動警示並推薦 Fisher's Exact Test。
-  - **交互作用診斷** ➔ 雙因子變異數分析檢測因子間是否存在統計學交互作用。
+  - **常態性檢定** (Shapiro-Wilk) ➔ 母數 vs 無母數自動判定。
+  - **變異數齊一性** (Levene's test) ➔ Student's t vs Welch's t (自由度修正)。
+  - **列聯表期望頻次診斷** ➔ 格子期望頻次 < 5 時主動推薦 Fisher's Exact Test。
+  - **交互作用診斷** ➔ 雙因子 ANOVA 檢測因子 A 與 B 間的統計學交互影響。
 
-### 2. 🧪 專業生醫統計檢定全套工具庫 (11 大統計方法)
+### 2. 🔮 專業生醫統計推論引擎 (11 大統計方法)
 1. **常態性與敘述統計**：Mean, SD, SEM, Median, IQR, 偏度, 峰度與 **Shapiro-Wilk 常態性檢定**。
 2. **兩組獨立樣本差異檢定**：Student's t、Welch's t、Mann-Whitney U 檢定與 Cohen's d 效果值。
 3. **配對樣本前後測檢定 (Paired Samples)**：Paired t-test、Wilcoxon Signed-Rank 符號等級檢定、前後測差值 CI 與配對效果量 Cohen's dz。
@@ -33,7 +34,7 @@
 10. **二元邏輯斯迴歸 (Logistic Regression)**：二元臨床預後模型、勝算比 (Odds Ratio, OR)、McFadden's Pseudo-R²。
 11. **多元線性迴歸 (Linear Regression OLS)**：多變量 OLS 模型擬合、係數顯著性與 95% 信賴區間。
 
-### 3. 📄 完整生醫統計分析報告產生器 (Structured Clinical Reports)
+### 3. 📄 結構化期刊醫學分析報告 (Mission Report Generator)
 - 自動產出符合國際醫學期刊（APA / ICMJE / NEJM）格式之結構化分析報告：
   - **研究假說與檢定設計**
   - **前提假設與診斷檢定**（常態性 p 值、齊一性判定）
@@ -41,7 +42,7 @@
   - **醫學期刊規範結論解讀 (Narrative Conclusion)**
 - 支援一鍵下載完整 Markdown 格式報告或複製至論文方法學/結果章節。
 
-### 4. 🎨 出版級圖表工坊 (全自訂 X/Y 尺度與字級)
+### 4. 🚀 光譜圖表工坊 (全自訂 X/Y 尺度與字級)
 - **多種生醫專用圖表**：
   - 箱形圖 / 小提琴圖 + 抖動散佈 (Box / Violin + Jitter Strip)
   - Kaplan-Meier 生存曲線 (含 95% CI 陰影與中位存活線)
@@ -51,15 +52,16 @@
   - 均值與誤差條柱狀圖 (Bar + SEM / SD)
   - 機率分佈與核密度圖 (Histogram + KDE)
   - 主成分分析投影圖 (PCA Biplot)
-- **全新深度座標軸客製化控制**：
+- **深度座標軸客製化控制**：
+  - **文字標籤完美呈現**：支援 X 軸文字資料直接排版，自動防止類別格式被重設為數值。
   - **X/Y 軸尺度自由切換**：線性尺度 (Linear) 或 對數尺度 (Log10)。
   - **X/Y 軸數值範圍自訂**：自訂最小值 (Min) 與 最大值 (Max) 放大檢視特徵區間。
   - **全方位文字大小調整**：主標題大小 (10~26 pt)、軸標籤大小 (8~22 pt)、座標刻度文字大小 (6~20 pt)。
   - **刻度標籤旋轉角度**：0°、30°、45°、90° 解決標籤重疊。
-  - **頂級期刊配色**：`Nature (NPG)`, `Lancet`, `NEJM`, `JAMA`, `Viridis` 等。
+  - **SpaceX & Tesla 專屬黑科技調色盤**：`SpaceX Starship (Cyber Cyan)`, `Tesla Cybertruck (Neon Red)`, `Nature`, `Lancet`, `NEJM`, `Viridis` 等。
   - **出版級匯出**：一鍵下載 **300/600 DPI 高解析度 PNG**、**向量格式 SVG** 或 **印刷級 PDF**。
 
-### 5. 💻 Python 自訂代碼繪圖實驗室 (Interactive Code Lab)
+### 5. 💻 自主程式實驗室 (Neural Code Lab)
 - 直接在線上 Python 編輯器中對已載入的 `df` 進行任何 Matplotlib / Seaborn 自由繪圖。
 - 內建進階生醫模板：層級分群熱圖 (Clustermap)、Pairplot、FacetGrid、Lollipop Chart、3D 散佈圖。
 
@@ -79,7 +81,7 @@ venv\Scripts\activate
 # 3. 安裝必要套件
 pip install -r requirements.txt
 
-# 4. 啟動 Web 服務
+# 4. 啟動 Super Xstat 伺服器
 streamlit run app.py
 ```
 瀏覽器將自動開啟 `http://localhost:8501`。

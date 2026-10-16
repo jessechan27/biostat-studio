@@ -14,49 +14,241 @@ import modules.code_sandbox as cs
 
 # Page Configuration
 st.set_page_config(
-    page_title="BioStat Studio | 生醫統計分析與客製化繪圖平台",
-    page_icon="🧬",
+    page_title="Super Xstat // 頂尖黑科技生物統計分析平台",
+    page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for polished scientific styling
+# Custom High-Tech Tesla / SpaceX Dark Sci-Fi Aesthetic CSS
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 2.1rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #1E3A8A 0%, #2563EB 50%, #0D9488 100%);
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap');
+
+    /* Global Typography & Deep Dark Sci-Fi Canvas */
+    html, body, [class*="css"] {
+        font-family: 'Rajdhani', 'Inter', 'Microsoft JhengHei', sans-serif;
+        color: #E2E8F0;
+    }
+
+    /* Top HUD Cockpit Container */
+    .hud-box {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(7, 10, 19, 0.95) 100%);
+        border: 1px solid rgba(0, 240, 255, 0.3);
+        border-left: 5px solid #00F0FF;
+        border-radius: 6px;
+        padding: 22px 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.08), inset 0 0 20px rgba(0, 240, 255, 0.02);
+        backdrop-filter: blur(16px);
+        position: relative;
+        overflow: hidden;
+    }
+    .hud-box::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 120px;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.05));
+        pointer-events: none;
+    }
+    .hud-topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        color: #94A3B8;
+        margin-bottom: 8px;
+    }
+    .hud-badge-spacex {
+        background: rgba(0, 240, 255, 0.12);
+        border: 1px solid rgba(0, 240, 255, 0.4);
+        color: #00F0FF;
+        padding: 3px 10px;
+        border-radius: 3px;
+        font-weight: 700;
+    }
+    .hud-status {
+        color: #00FF66;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+    @keyframes pulse-beacon {
+        0% { transform: scale(0.9); opacity: 0.7; }
+        50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 10px #00FF66; }
+        100% { transform: scale(0.9); opacity: 0.7; }
+    }
+    .pulsing-dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        background-color: #00FF66;
+        border-radius: 50%;
+        margin-right: 6px;
+        animation: pulse-beacon 1.8s infinite ease-in-out;
+    }
+    .hud-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2.7rem;
+        font-weight: 900;
+        letter-spacing: 3.5px;
+        background: linear-gradient(135deg, #FFFFFF 0%, #A5F3FC 40%, #00F0FF 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 0.2rem;
+        text-shadow: 0 0 30px rgba(0, 240, 255, 0.35);
+        margin: 2px 0 6px 0;
     }
-    .sub-header {
-        color: #475569;
-        font-size: 1.05rem;
-        margin-bottom: 1.5rem;
+    .accent-x {
+        color: #E82127 !important;
+        -webkit-text-fill-color: #E82127 !important;
+        text-shadow: 0 0 25px rgba(232, 33, 39, 0.9);
+        display: inline-block;
+        transform: scale(1.08);
     }
-    .metric-card {
-        background-color: #F8FAFC;
-        border-radius: 8px;
-        padding: 16px;
-        border-left: 4px solid #2563EB;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    .hud-subtitle {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.15rem;
+        color: #94A3B8;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+        margin-bottom: 14px;
     }
-    .stTabs [data-baseweb="tab-list"] {
+    .hud-stats-bar {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        border-top: 1px solid rgba(0, 240, 255, 0.15);
+        padding-top: 12px;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.75rem;
+    }
+    .hud-stat-item {
+        background: rgba(10, 15, 26, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 5px 12px;
+        border-radius: 3px;
+        display: flex;
         gap: 8px;
     }
+    .hud-lbl { color: #64748B; }
+    .hud-val { color: #00F0FF; font-weight: 700; }
+
+    /* SpaceX Starship Angular Glass Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        background: rgba(10, 15, 26, 0.85);
+        border: 1px solid rgba(0, 240, 255, 0.22);
+        border-radius: 6px;
+        padding: 6px;
+        gap: 6px;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+    }
     .stTabs [data-baseweb="tab"] {
-        height: 48px;
-        white-space: pre-wrap;
-        background-color: #F1F5F9;
-        border-radius: 6px 6px 0 0;
-        padding: 0 16px;
-        font-weight: 600;
+        font-family: 'Orbitron', 'Rajdhani', sans-serif !important;
+        font-size: 0.9rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 1.2px !important;
+        color: #94A3B8 !important;
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        border-radius: 4px !important;
+        padding: 8px 16px !important;
+        transition: all 0.25s ease !important;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #00F0FF !important;
+        background: rgba(0, 240, 255, 0.08) !important;
+        border-color: rgba(0, 240, 255, 0.3) !important;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #2563EB !important;
-        color: white !important;
+        background: linear-gradient(180deg, rgba(0, 240, 255, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        color: #00F0FF !important;
+        border: 1px solid rgba(0, 240, 255, 0.6) !important;
+        border-bottom: 3px solid #00F0FF !important;
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.3) !important;
+    }
+
+    /* Sci-Fi Metric HUD Cards */
+    [data-testid="stMetric"] {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(8, 12, 22, 0.95) 100%) !important;
+        border: 1px solid rgba(0, 240, 255, 0.22) !important;
+        border-radius: 6px !important;
+        padding: 16px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(0, 240, 255, 0.02) !important;
+        backdrop-filter: blur(10px) !important;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    [data-testid="stMetric"]:hover {
+        border-color: rgba(0, 240, 255, 0.5) !important;
+        transform: translateY(-2px);
+    }
+    [data-testid="stMetricLabel"] {
+        font-family: 'Rajdhani', sans-serif !important;
+        font-size: 1.05rem !important;
+        font-weight: 700 !important;
+        color: #94A3B8 !important;
+        letter-spacing: 1.2px !important;
+        text-transform: uppercase;
+    }
+    [data-testid="stMetricValue"] {
+        font-family: 'Orbitron', monospace !important;
+        color: #00F0FF !important;
+        font-size: 1.85rem !important;
+        font-weight: 800 !important;
+        text-shadow: 0 0 12px rgba(0, 240, 255, 0.45) !important;
+    }
+
+    /* Tesla Cybertruck & SpaceX Action Buttons */
+    button[kind="primary"] {
+        background: linear-gradient(90deg, #E82127 0%, #FF1E40 100%) !important;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(255, 30, 64, 0.6) !important;
+        font-family: 'Orbitron', sans-serif !important;
+        letter-spacing: 1.8px !important;
+        font-weight: 700 !important;
+        border-radius: 4px !important;
+        box-shadow: 0 0 20px rgba(232, 33, 39, 0.45) !important;
+        transition: all 0.3s ease !important;
+        text-transform: uppercase;
+    }
+    button[kind="primary"]:hover {
+        background: linear-gradient(90deg, #FF1E40 0%, #00F0FF 100%) !important;
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.7) !important;
+        border-color: #00F0FF !important;
+        color: #07090E !important;
+        transform: translateY(-1.5px);
+    }
+    button[kind="secondary"] {
+        background: rgba(15, 23, 42, 0.8) !important;
+        color: #E2E8F0 !important;
+        border: 1px solid rgba(0, 240, 255, 0.3) !important;
+        font-family: 'Rajdhani', sans-serif !important;
+        font-weight: 600 !important;
+        letter-spacing: 1px !important;
+        border-radius: 4px !important;
+        transition: all 0.2s ease !important;
+    }
+    button[kind="secondary"]:hover {
+        background: rgba(0, 240, 255, 0.15) !important;
+        border-color: #00F0FF !important;
+        color: #00F0FF !important;
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.35) !important;
+    }
+
+    /* High-Tech Containers & Dataframes */
+    .stExpander {
+        background: rgba(13, 19, 33, 0.75) !important;
+        border: 1px solid rgba(0, 240, 255, 0.22) !important;
+        border-radius: 6px !important;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3) !important;
+    }
+    [data-testid="stSidebar"] {
+        background-color: #080C14 !important;
+        border-right: 1px solid rgba(0, 240, 255, 0.18) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -71,10 +263,10 @@ if 'active_code' not in st.session_state:
 
 # Sidebar: Data Source & Selection
 with st.sidebar:
-    st.image("https://img.shields.io/badge/BioStat_Studio-v1.2.0-blue?style=for-the-badge&logo=python", use_container_width=True)
-    st.header("📂 數據匯入中心")
+    st.image("https://img.shields.io/badge/SUPER_XSTAT-v3.0_QUANTUM-00F0FF?style=for-the-badge&logo=spacex&logoColor=white", use_container_width=True)
+    st.header("⚡ 數據匯入中心 // DATA DOCK")
     
-    data_source = st.radio("資料來源", ["上傳自己的 Excel / CSV", "載入生醫範例資料庫"], index=1)
+    data_source = st.radio("資料來源", ["上傳自己的 Excel / CSV", "載入生醫示範數據庫"], index=1)
     
     uploaded_df = None
     df_name = ""
@@ -89,7 +281,7 @@ with st.sidebar:
                 selected_sheet = st.selectbox("選擇工作表 (Sheet)", sheet_names)
             try:
                 uploaded_df = dm.load_data(uploaded_file, sheet_name=selected_sheet)
-                st.success(f"成功載入: {df_name}")
+                st.success(f"資料載入成功: {df_name}")
             except Exception as e:
                 st.error(f"讀取失敗: {e}")
     else:
@@ -104,7 +296,7 @@ with st.sidebar:
         if os.path.exists(sample_path):
             df_name = os.path.basename(sample_path)
             uploaded_df = pd.read_excel(sample_path)
-            st.info(f"已啟用範例數據集：`{selected_sample}`")
+            st.info(f"已啟用數據矩陣：`{selected_sample}`")
         else:
             st.warning("範例檔案建構中...")
 
@@ -113,20 +305,35 @@ with st.sidebar:
         st.session_state.df_name = df_name
 
     st.markdown("---")
-    st.markdown("### 🛠️ 支援核心工具")
-    st.caption("• **統計決策精靈** 智慧引導適法統計\n• **完整分析報告** 自動產出醫學結論\n• **圖表尺度自由縮放** 線性/對數/範圍\n• **座標文字自訂** 標題/軸名/刻度字級\n• 300/600 DPI 高解析 & 向量 SVG/PDF 匯出")
+    st.markdown("### 🛠️ 量子運算模組")
+    st.caption("• **自動推論決策精靈** 智慧引導適法統計\n• **結構化分析報告** 自動產出期刊醫學結論\n• **全自訂 X/Y 尺度** 線性/對數/數值範圍\n• **文字標籤與字級控制** 支援文字刻度與傾斜旋轉\n• **Tesla/SpaceX 出版級匯出** 300/600 DPI & 向量 SVG/PDF")
 
-# Main Header
-st.markdown('<div class="main-header">🧬 BioStat Studio 生物統計分析與客製化繪圖平台</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">整合 Excel 數據剖析、醫學統計推論檢定、出版級 Seaborn/Matplotlib 視覺化與 Python 即時繪圖實驗室</div>', unsafe_allow_html=True)
+# Main Header - Tesla / SpaceX Cockpit HUD Banner
+st.markdown("""
+<div class="hud-box">
+  <div class="hud-topline">
+    <span class="hud-badge-spacex">SPACEX // TESLA INFERENCE ENGINE</span>
+    <span class="hud-status"><span class="pulsing-dot"></span>SYS_CORE: OPERATIONAL</span>
+    <span>ENCRYPTION: 512-BIT QUANTUM // LATENCY: 0.42ms</span>
+  </div>
+  <div class="hud-title">SUPER <span class="accent-x">X</span>STAT</div>
+  <div class="hud-subtitle">AEROSPACE-GRADE BIOSTATISTICAL INTELLIGENCE & HIGH-PRECISION VISUALIZATION PLATFORM</div>
+  <div class="hud-stats-bar">
+    <div class="hud-stat-item"><span class="hud-lbl">FLIGHT_COMPUTER</span><span class="hud-val">STARSHIP_BIO_v3.0</span></div>
+    <div class="hud-stat-item"><span class="hud-lbl">INFERENCE_CORE</span><span class="hud-val">QUANTUM GAUSSIAN</span></div>
+    <div class="hud-stat-item"><span class="hud-lbl">VECTOR_ENGINE</span><span class="hud-val">SEABORN // MATPLOTLIB ACCELERATED</span></div>
+    <div class="hud-stat-item"><span class="hud-lbl">TELEMETRY_LINK</span><span class="hud-val">STARLINK ACTIVE</span></div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 # Main Navigation Tabs
 tab_data, tab_stats, tab_plots, tab_code, tab_export = st.tabs([
-    "📁 1. 數據管理 (Data Hub)",
-    "🧪 2. 生物統計分析與完整報告 (Biostats)",
-    "🎨 3. 視覺化圖表工坊 (Plot Studio)",
-    "💻 4. 自訂代碼繪圖 (Python Code Lab)",
-    "📦 5. 匯出與 GitHub 發佈 (Export & GitHub)"
+    "⚡ 01 // DATA MATRIX (數據矩陣)",
+    "🔮 02 // STATISTICAL CORE (推論運算核心)",
+    "🚀 03 // SPECTRUM STUDIO (高精圖表工坊)",
+    "💻 04 // NEURAL CODE LAB (自主程式實驗室)",
+    "🛰️ 05 // MISSION CONTROL (指令與發佈中心)"
 ])
 
 # Guard condition if no data is loaded
@@ -851,43 +1058,43 @@ with tab_code:
 # TAB 5: 匯出與 GitHub 發佈 (Export & GitHub)
 # ==============================================================================
 with tab_export:
-    st.subheader("📦 專案匯出與 GitHub 開源發佈指南")
+    st.subheader("🛰️ MISSION CONTROL // 數據匯出與 GITHUB 遠端控制")
     
     col_ex1, col_ex2 = st.columns(2)
     
     with col_ex1:
-        st.markdown("#### 1. 數據與清洗結果匯出")
-        st.write("您可以下載當前已載入並整理完畢的資料集：")
+        st.markdown("#### 1. 數據矩陣全量匯出 (DATA EXPORT)")
+        st.write("下載當前經由 Super Xstat 解析與校正之完整資料集：")
         
         excel_buf = io.BytesIO()
         with pd.ExcelWriter(excel_buf, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='BioStat_Data')
+            df.to_excel(writer, index=False, sheet_name='Super_Xstat_Data')
         excel_buf.seek(0)
         
         st.download_button(
             "📥 下載處理後數據 (Excel .xlsx)",
             excel_buf.getvalue(),
-            f"processed_{st.session_state.df_name or 'biostat_data.xlsx'}",
+            f"super_xstat_{st.session_state.df_name or 'matrix.xlsx'}",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True
         )
         
     with col_ex2:
-        st.markdown("#### 2. 本地啟動與開發")
-        st.code("""# 在終端機執行此命令即可本地啟動此網站：
+        st.markdown("#### 2. 本地終端機快速啟動")
+        st.code("""# 於專案目錄執行啟動 Super Xstat 本地伺服器：
 streamlit run app.py
 """, language="bash")
 
     st.markdown("---")
-    st.markdown("#### 3. 🚀 發佈至 GitHub Repository")
+    st.markdown("#### 3. 🚀 GITHUB TELEMETRY // 遠端推送同步")
     st.markdown("""
-    本專案已成功綁定遠端儲存庫 **[https://github.com/jessechan27/biostat-studio.git](https://github.com/jessechan27/biostat-studio.git)**。
-    若您在本地有新更動，執行以下命令即可推送更新：
+    本專案已綁定遠端 GitHub 儲存庫 **[https://github.com/jessechan27/biostat-studio.git](https://github.com/jessechan27/biostat-studio.git)**。
+    執行以下指令即可將最新黑科技版 Super Xstat 同步至雲端：
     """)
     
     st.code("""git add .
-git commit -m "feat: enhance biostats methods, report generator, and axis customization"
+git commit -m "feat: transform frontend into Super Xstat Tesla/SpaceX dark tech style"
 git push origin main
 """, language="bash")
     
-    st.info("💡 **免費雲端部署**：上傳至 GitHub 後，您可以直接前往 [Streamlit Community Cloud](https://share.streamlit.io/) 點擊 'Deploy an app'，選取您的 GitHub 儲存庫與 `app.py`，即可一鍵免費獲得公開生醫分析雲端網站！")
+    st.info("💡 **一鍵免費雲端上線 (Streamlit Cloud)**：前往 share.streamlit.io 點擊 'Deploy an app'，連結 `jessechan27/biostat-studio` 與 `app.py`，即可將 Super Xstat 部署為全球可存取的頂級黑科技雲端網站！")
